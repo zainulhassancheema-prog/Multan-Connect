@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { BackButton } from '@/components/shared/BackButton';
+import { useAuthStore } from '@/lib/store/authStore';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -18,17 +20,51 @@ const loginSchema = z.object({
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
   
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'seller' || user.role === 'both') {
+        navigate('/seller', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [user, navigate]);
+
   const { register, handleSubmit, formState: { errors }, getValues } = useForm({
     resolver: zodResolver(loginSchema)
   });
 
+  const redirectUser = (role: string) => {
+    // Priority: use search param if present (e.g. from a protected route)
+    const searchParams = new URLSearchParams(location.search);
+    const redirectParam = searchParams.get('redirect');
+    if (redirectParam) {
+       navigate(redirectParam, { replace: true });
+       return;
+    }
+
+    if (role === 'seller' || role === 'both') {
+      navigate('/seller', { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  };
+
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      navigate('/');
+      const cred = await signInWithEmailAndPassword(auth, data.email, data.password);
+      const userRef = doc(db, 'users', cred.user.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+         redirectUser(snap.data().role || 'buyer');
+      } else {
+         redirectUser('buyer');
+      }
     } catch (error: any) {
       toast.error('Login Failed', { description: error.message });
     } finally {
@@ -43,7 +79,6 @@ export default function Login() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // Ensure user document exists
       const userRef = doc(db, 'users', user.uid);
       const snap = await getDoc(userRef);
       if (!snap.exists()) {
@@ -55,8 +90,10 @@ export default function Login() {
            role: 'buyer',
            createdAt: Date.now()
          });
+         redirectUser('buyer');
+      } else {
+         redirectUser(snap.data().role || 'buyer');
       }
-      navigate('/');
     } catch (error: any) {
       toast.error('Google Sign-In Failed', { description: error.message });
     } finally {
@@ -76,7 +113,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-4 relative">
+      <BackButton className="absolute top-6 left-6" />
       <div className="w-full max-w-md bg-white rounded-3xl p-8 border border-border shadow-xl">
         <div className="text-center mb-8">
           <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-heading font-bold italic mx-auto mb-4">M</div>

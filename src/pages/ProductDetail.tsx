@@ -1,53 +1,103 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, setDoc, serverTimestamp, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Product, User } from '@/lib/types';
+import { Product, User, Review } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShoppingBag, Heart, Share2, Star } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cartStore';
 import { toast } from 'sonner';
+import { BackButton } from '@/components/shared/BackButton';
+import { useAuthStore } from '@/lib/store/authStore';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuthStore();
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading: productLoading } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
       if (!id) return null;
       const docRef = doc(db, 'products', id);
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) throw new Error('Product not found');
+      
+      // Increment views
+      await updateDoc(docRef, { views: increment(1) }).catch(err => console.error("Could not update views:", err));
+      
       return { id: docSnap.id, ...docSnap.data() } as Product;
     }
   });
 
-  const { data: artisan } = useQuery({
+  const { data: artisan, isLoading: artisanLoading } = useQuery({
     queryKey: ['artisan', product?.sellerId],
     enabled: !!product?.sellerId,
     queryFn: async () => {
       const docRef = doc(db, 'users', product!.sellerId);
       const docSnap = await getDoc(docRef);
-      return docSnap.data() as User;
+      return { uid: docSnap.id, ...docSnap.data() } as User;
     }
   });
 
-  const images = product?.images?.length ? product.images : ['https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80'];
+  const { data: reviews } = useQuery({
+    queryKey: ['product-reviews', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const q = query(
+        collection(db, "reviews"),
+        where("productId", "==", id),
+        orderBy("createdAt", "desc"),
+        limit(10)
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Review[];
+    }
+  });
 
-  const handleAddToCart = () => {
-    if (product) {
-      addItem({ productId: product.id, quantity });
-      toast.success('Added to cart', { description: `${quantity}x ${product.title}` });
+  const images = product?.images?.length ? product.images : [];
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+    
+    if (user) {
+       try {
+         const cartItemRef = doc(db, "cart", user.uid, "items", product.id);
+         await setDoc(cartItemRef, {
+            productId: product.id,
+            title: product.title,
+            price: product.price,
+            imageUrl: product.images?.[0] || "",
+            sellerName: product.sellerName || artisan?.displayName || 'Artisan',
+            sellerId: product.sellerId,
+            quantity: increment(quantity),
+            addedAt: serverTimestamp()
+         }, { merge: true });
+         toast.success('Added to cart', { description: `${quantity}x ${product.title}` });
+       } catch (err: any) {
+         toast.error('Failed to add to cart', { description: err.message });
+       }
+    } else {
+       addItem({ 
+         productId: product.id, 
+         title: product.title,
+         price: product.price,
+         imageUrl: product.images?.[0] || "",
+         sellerName: product.sellerName || artisan?.displayName || 'Artisan',
+         sellerId: product.sellerId,
+         quantity,
+         addedAt: Date.now()
+       } as any);
+       toast.success('Added to cart!', { description: "Sign in to save your cart." });
     }
   };
 
-  if (isLoading) {
+  if (productLoading) {
     return (
       <div className="container mx-auto px-4 py-12 flex gap-12">
         <Skeleton className="w-1/2 h-[600px] rounded-3xl" />
@@ -64,21 +114,28 @@ export default function ProductDetail() {
 
   return (
     <div className="bg-cream min-h-screen pb-24">
-      {/* Breadcrumb */}
-      <div className="container mx-auto px-4 py-6 text-sm flex items-center gap-2 text-muted-foreground uppercase tracking-widest text-xs">
-        <Link to="/" className="hover:text-gold">Home</Link>
-        <span>/</span>
-        <Link to={`/explore?category=${product.category}`} className="hover:text-gold">{product.category}</Link>
-        <span>/</span>
-        <span className="text-ink truncate max-w-[200px]">{product.title}</span>
+      {/* Breadcrumb & Back */}
+      <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
+        <BackButton />
+        <div className="text-sm flex items-center gap-2 text-muted-foreground uppercase tracking-widest text-xs">
+          <Link to="/" className="hover:text-gold">Home</Link>
+          <span>/</span>
+          <Link to={`/explore?category=${product.category}`} className="hover:text-gold">{product.category}</Link>
+          <span>/</span>
+          <span className="text-ink truncate max-w-[200px]">{product.title}</span>
+        </div>
       </div>
 
-      <div className="container mx-auto px-4 flex flex-col md:flex-row gap-12 lg:gap-24">
+      <div className="container mx-auto px-4 flex flex-col md:flex-row gap-12 lg:gap-24 mb-24">
         
         {/* Images */}
         <div className="w-full md:w-1/2 flex flex-col gap-4">
-          <div className="aspect-[4/5] md:aspect-square bg-white rounded-3xl overflow-hidden border border-border">
-            <img src={images[activeImage]} alt={product.title} className="w-full h-full object-cover" />
+          <div className="aspect-[4/5] md:aspect-square bg-navy/5 flex items-center justify-center rounded-3xl overflow-hidden border border-border">
+            {images.length > 0 ? (
+              <img src={images[activeImage]} alt={product.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="text-navy font-heading font-bold text-4xl italic opacity-50">MC</div>
+            )}
           </div>
           {images.length > 1 && (
             <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
@@ -139,7 +196,7 @@ export default function ProductDetail() {
                 </div>
                 <div>
                   <Link to={`/artisan/${product.sellerId}`} className="font-heading font-bold text-xl hover:text-gold transition-colors block">{artisan.displayName}</Link>
-                  <span className="font-serif italic text-muted-foreground text-sm">{artisan.craftSpecialty || 'Master Artisan'} &bull; {artisan.workshopLocation || 'Multan'}</span>
+                  <span className="font-serif italic text-muted-foreground text-sm">{artisan.craftSpecialty || artisan.craftType || 'Master Artisan'} &bull; {artisan.workshopLocation || product.location || 'Multan'}</span>
                 </div>
               </div>
             </div>
@@ -147,6 +204,32 @@ export default function ProductDetail() {
 
         </div>
       </div>
+
+      {/* Reviews Section */}
+      <div className="container mx-auto px-4 max-w-4xl border-t border-border pt-16">
+        <h2 className="font-heading font-bold text-3xl text-ink mb-12">Customer Reviews</h2>
+        {reviews && reviews.length > 0 ? (
+          <div className="space-y-8">
+            {reviews.map((review) => (
+              <div key={review.id} className="pb-8 border-b border-border/50 last:border-0">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center font-heading font-bold">{review.reviewerName?.charAt(0) || 'U'}</div>
+                  <div>
+                    <p className="font-sans font-medium text-ink">{review.reviewerName || 'Anonymous User'}</p>
+                    <div className="flex items-center text-gold mt-1">
+                      {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-current' : 'text-muted'}`} />)}
+                    </div>
+                  </div>
+                </div>
+                <p className="font-serif text-ink/80">{review.comment}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="font-serif italic text-muted-foreground">No reviews yet for this product.</p>
+        )}
+      </div>
+
     </div>
   );
 }

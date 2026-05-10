@@ -1,18 +1,16 @@
 import AnimatedSection from '@/components/shared/AnimatedSection';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { BackButton } from '@/components/shared/BackButton';
 
 export default function ArtisanProfile() {
   const { id } = useParams();
-  const navigate = useNavigate();
   
   return (
-    <div className="min-h-screen bg-sand pt-24 pb-12">
+    <div className="min-h-screen bg-sand pt-8 pb-12">
       <AnimatedSection className="container mx-auto px-4 max-w-4xl text-center">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 hover:text-gold hover-underline">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
+        <div className="flex justify-start mb-8">
+          <BackButton />
+        </div>
         <div className="w-32 h-32 mx-auto bg-white rounded-full flex items-center justify-center mb-6 shadow-md border-4 border-white overflow-hidden">
              <img src="https://images.unsplash.com/photo-1533227268428-f9ed0900f953?auto=format&fit=crop&q=80" alt="Artisan" className="w-full h-full object-cover" />
         </div>

@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type Role = 'buyer' | 'seller' | 'both';
 
 export interface User {
@@ -7,6 +9,7 @@ export interface User {
   photoURL?: string;
   role: Role;
   isVerifiedArtisan?: boolean;
+  craftType?: string;
   craftSpecialty?: string;
   workshopLocation?: string;
   yearsActive?: number;
@@ -20,38 +23,46 @@ export interface User {
 export interface Product {
   id: string;
   sellerId: string;
+  sellerName: string;
+  sellerPhotoUrl: string;
   title: string;
   description: string;
-  category: string;
   price: number;
+  category: string;
+  images: string[];
   stock: number;
+  isAvailable: boolean;
+  isFeatured: boolean;
   location: string;
   tags: string[];
-  images: string[];
-  isAvailable: boolean;
-  totalSold: number;
   rating: number;
   reviewCount: number;
-  createdAt: number;
-  updatedAt: number;
+  totalSold: number;
+  views: number;
+  createdAt: Timestamp | number | any;
+  updatedAt: Timestamp | number | any;
 }
 
 export interface CartItem {
   productId: string;
+  title: string;
+  price: number;
+  imageUrl: string;
+  sellerName: string;
+  sellerId: string;
   quantity: number;
+  addedAt: Timestamp | number | any;
 }
 
 export interface Order {
-  id: string;
-  userId: string;
-  items: {
-    productId: string;
-    sellerId: string;
-    quantity: number;
-    price: number;
-    title: string;
-    image: string;
-  }[];
+  id?: string;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  items: CartItem[];
+  totalAmount: number;
+  deliveryFee: number;
+  grandTotal: number;
   shippingAddress: {
     name: string;
     phone: string;
@@ -61,11 +72,11 @@ export interface Order {
     country: string;
     postalCode: string;
   };
-  paymentMethod: 'cod' | 'card';
-  grandTotal: number;
+  paymentMethod: 'cod' | 'card' | string;
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   trackingNumber?: string;
-  createdAt: number;
+  createdAt: Timestamp | number | any;
+  updatedAt?: Timestamp | number | any;
 }
 
 export interface Review {
@@ -76,5 +87,5 @@ export interface Review {
   rating: number;
   comment: string;
   image?: string;
-  createdAt: number;
+  createdAt: Timestamp | number | any;
 }

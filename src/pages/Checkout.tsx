@@ -4,15 +4,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuthStore } from '@/lib/store/authStore';
-import { useCartStore } from '@/lib/store/cartStore';
-import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDocs, updateDoc, increment, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Product } from '@/lib/types';
+import { Product, CartItem as TCartItem } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BackButton } from '@/components/shared/BackButton';
 
 const shippingSchema = z.object({
   name: z.string().min(2),
@@ -26,11 +26,10 @@ const shippingSchema = z.object({
 
 export default function Checkout() {
   const { user } = useAuthStore();
-  const { items, clearCart } = useCartStore();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [cartProducts, setCartProducts] = useState<Product[]>([]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
   
   const { register, handleSubmit, formState: { errors }, getValues } = useForm({
     resolver: zodResolver(shippingSchema),
@@ -38,29 +37,28 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    if (items.length === 0) {
-      navigate('/cart');
+    if (!user) {
+      navigate('/login');
       return;
     }
     
-    // Fetch product details
-    const fetchProducts = async () => {
-      const fetched = [];
-      for (const item of items) {
-         const snap = await getDoc(doc(db, 'products', item.productId));
-         if (snap.exists()) {
-           fetched.push({ id: snap.id, ...snap.data() } as Product);
-         }
+    const fetchCart = async () => {
+      const q = collection(db, 'cart', user.uid, 'items');
+      const snap = await getDocs(q);
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      if (items.length === 0) {
+        navigate('/cart');
+      } else {
+        setCartItems(items);
       }
-      setCartProducts(fetched);
     };
-    fetchProducts();
-  }, [items, navigate]);
+    fetchCart();
+  }, [user, navigate]);
 
-  const grandTotal = items.reduce((total, item) => {
-    const product = cartProducts.find(p => p.id === item.productId);
-    return total + (product ? product.price * item.quantity : 0);
-  }, 0);
+  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const deliveryFee = 250;
+  const grandTotal = subtotal + deliveryFee;
 
   const placeOrder = async () => {
     if (!user) {
@@ -71,29 +69,43 @@ export default function Checkout() {
     
     setLoading(true);
     try {
-      const orderData = {
-        userId: user.uid,
-        items: items.map(item => {
-          const p = cartProducts.find(x => x.id === item.productId)!;
-          return {
-            productId: p.id,
-            sellerId: p.sellerId,
-            quantity: item.quantity,
-            price: p.price,
-            title: p.title,
-            image: p.images[0]
-          };
-        }),
-        shippingAddress: getValues(),
-        paymentMethod: 'cod',
+      // Create order
+      const orderRef = await addDoc(collection(db, 'orders'), {
+        buyerId: user.uid,
+        buyerName: user.displayName || getValues().name,
+        sellerId: cartItems[0].sellerId, // assuming same seller for simplicity based on prompt
+        items: cartItems.map(item => ({
+          productId: item.productId,
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          imageUrl: item.imageUrl
+        })),
+        totalAmount: subtotal,
+        deliveryFee,
         grandTotal,
         status: 'pending',
-        createdAt: Date.now()
-      };
+        shippingAddress: getValues(),
+        paymentMethod: 'cod',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
       
-      const docRef = await addDoc(collection(db, 'orders'), orderData);
-      clearCart();
-      navigate(`/orders/${docRef.id}/confirmation`);
+      // Update stock
+      for (const item of cartItems) {
+        await updateDoc(doc(db, "products", item.productId), {
+          stock: increment(-item.quantity),
+          totalSold: increment(item.quantity)
+        });
+      }
+      
+      // Clear cart
+      const cartRef = collection(db, "cart", user.uid, "items");
+      const cartSnap = await getDocs(cartRef);
+      const deletePromises = cartSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+      
+      navigate(`/orders/${orderRef.id}/confirmation`);
     } catch (err: any) {
        toast.error('Failed to place order', { description: err.message });
        setLoading(false);
@@ -106,7 +118,10 @@ export default function Checkout() {
         
         {/* Main flow */}
         <div className="flex-1">
-          <h1 className="font-heading font-bold text-3xl mb-8">Checkout</h1>
+          <div className="flex items-center gap-4 mb-8">
+            <BackButton label="Back to Cart" href="/cart" />
+            <h1 className="font-heading font-bold text-3xl">Checkout</h1>
+          </div>
           
           {/* Step 1: Shipping */}
           <div className={`bg-white rounded-3xl p-8 shadow-sm mb-6 ${step !== 1 ? 'opacity-60 grayscale' : ''}`}>
@@ -190,24 +205,36 @@ export default function Checkout() {
            <div className="bg-white rounded-3xl p-8 sticky top-24 border border-border/50 shadow-sm">
              <h3 className="font-heading font-medium text-lg mb-6">In your cart</h3>
              <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto no-scrollbar">
-               {items.map(item => {
-                 const p = cartProducts.find(x => x.id === item.productId);
-                 if (!p) return null;
+               {cartItems.map(item => {
                  return (
                    <div key={item.productId} className="flex gap-4 items-center">
-                     <div className="w-16 h-16 rounded-md overflow-hidden bg-muted">
-                        <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
+                     <div className="w-16 h-16 rounded-md overflow-hidden bg-navy/5 flex items-center justify-center">
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="font-heading font-bold italic text-navy/40">MC</span>
+                        )}
                      </div>
                      <div className="flex-1 text-sm">
-                        <p className="font-medium truncate">{p.title}</p>
+                        <p className="font-medium truncate">{item.title}</p>
                         <p className="text-muted-foreground italic font-serif">Qty: {item.quantity}</p>
                      </div>
-                     <span className="font-bold text-sm tracking-tighter">{formatPrice(p.price * item.quantity)}</span>
+                     <span className="font-bold text-sm tracking-tighter">{formatPrice(item.price * item.quantity)}</span>
                    </div>
                  )
                })}
              </div>
              
+             <div className="border-t border-border pt-4 text-sm space-y-2 mb-4">
+               <div className="flex justify-between items-center text-muted-foreground">
+                 <span>Subtotal</span>
+                 <span>{formatPrice(subtotal)}</span>
+               </div>
+               <div className="flex justify-between items-center text-muted-foreground">
+                 <span>Delivery Fee</span>
+                 <span>{formatPrice(deliveryFee)}</span>
+               </div>
+             </div>
              <div className="border-t border-border pt-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground text-sm uppercase tracking-widest">Total</span>

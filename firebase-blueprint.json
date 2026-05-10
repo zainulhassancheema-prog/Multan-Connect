@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile document",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["buyer", "seller", "both"] },
+        "createdAt": { "type": "number" },
+        "isVerifiedArtisan": { "type": "boolean" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product listing",
+      "type": "object",
+      "properties": {
+        "sellerId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "category": { "type": "string" },
+        "location": { "type": "string" },
+        "images": { "type": "array" },
+        "isAvailable": { "type": "boolean" },
+        "createdAt": { "type": "object" },
+        "totalSold": { "type": "number" }
+      },
+      "required": ["sellerId", "title", "price", "stock", "category"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Purchase order",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "items": { "type": "array" },
+        "shippingAddress": { "type": "object" },
+        "paymentMethod": { "type": "string" },
+        "grandTotal": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "items", "shippingAddress", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Products listed for sale"
+    },
+    "orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders"
+    }
+  }
+}

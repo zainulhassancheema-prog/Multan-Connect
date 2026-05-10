@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -8,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
 
 export default function Listings() {
   const { user } = useAuthStore();
-  const [isAdding, setIsAdding] = useState(false);
 
   const { data: listings, isLoading } = useQuery({
     queryKey: ['my-listings', user?.uid],
@@ -27,9 +26,11 @@ export default function Listings() {
     <div className="max-w-6xl mx-auto">
        <div className="flex justify-between items-center mb-8">
          <h1 className="font-heading font-bold text-4xl">My Listings</h1>
-         <Button onClick={() => setIsAdding(true)} className="bg-gold hover:bg-gold-light text-ink rounded-full px-6">
-            <Plus className="w-4 h-4 mr-2" /> Add New
-         </Button>
+         <Link to="/seller/add-product">
+           <Button className="bg-gold hover:bg-gold-light text-ink rounded-full px-6">
+              <Plus className="w-4 h-4 mr-2" /> Add New
+           </Button>
+         </Link>
        </div>
 
        {isLoading ? (
@@ -63,7 +64,9 @@ export default function Listings() {
        ) : (
           <div className="text-center py-24 bg-white rounded-3xl border border-border">
              <p className="font-serif italic text-muted-foreground text-lg mb-4">You have no listings yet.</p>
-             <Button onClick={() => setIsAdding(true)} variant="outline" className="rounded-full">Create Your First Listing</Button>
+             <Link to="/seller/add-product">
+               <Button variant="outline" className="rounded-full">Create Your First Listing</Button>
+             </Link>
           </div>
        )}
     </div>

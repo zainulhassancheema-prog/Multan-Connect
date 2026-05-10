@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import AnimatedSection from '@/components/shared/AnimatedSection';
@@ -14,7 +14,26 @@ export default function Home() {
   const { data: trendingProducts, isLoading: loadingProducts } = useQuery({
     queryKey: ['trending-products'],
     queryFn: async () => {
-      const q = query(collection(db, 'products'), orderBy('totalSold', 'desc'), limit(4));
+      const q = query(
+        collection(db, "products"),
+        where("isAvailable", "==", true),
+        orderBy("totalSold", "desc"),
+        limit(8)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
+    }
+  });
+
+  const { data: newArrivals, isLoading: loadingNewArrivals } = useQuery({
+    queryKey: ['new-arrivals'],
+    queryFn: async () => {
+      const q = query(
+        collection(db, "products"),
+        where("isAvailable", "==", true),
+        orderBy("createdAt", "desc"),
+        limit(8)
+      );
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
     }
@@ -23,7 +42,11 @@ export default function Home() {
   const { data: featuredArtisans, isLoading: loadingArtisans } = useQuery({
     queryKey: ['featured-artisans'],
     queryFn: async () => {
-      const q = query(collection(db, 'users'), where('isVerifiedArtisan', '==', true), limit(4));
+      const q = query(
+        collection(db, "users"),
+        where("role", "in", ["seller", "both"]),
+        limit(6)
+      );
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() })) as User[];
     }
@@ -121,6 +144,7 @@ export default function Home() {
       </AnimatedSection>
 
       {/* Featured Artisans */}
+      {(loadingArtisans || (featuredArtisans && featuredArtisans.length > 0)) && (
       <AnimatedSection className="py-24 container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="font-heading text-4xl lg:text-5xl text-ink mb-4 font-bold">Meet the Makers</h2>
@@ -146,7 +170,7 @@ export default function Home() {
                   <img src={artisan.photoURL || 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?auto=format&fit=crop&q=80'} alt={artisan.displayName} className="w-full h-full object-cover" />
                 </div>
                 <h3 className="font-heading font-bold text-xl text-ink mb-1">{artisan.displayName}</h3>
-                <p className="font-serif italic text-gold text-sm mb-4">{artisan.craftSpecialty || 'Master Artisan'}</p>
+                <p className="font-serif italic text-gold text-sm mb-4">{artisan.craftSpecialty || artisan.craftType || 'Master Artisan'}</p>
                 <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs uppercase tracking-wider mb-6">
                   <span>★ {artisan.totalSales || 0} Sales</span>
                 </div>
@@ -158,8 +182,10 @@ export default function Home() {
           </div>
         )}
       </AnimatedSection>
+      )}
 
       {/* Trending Products */}
+      {(loadingProducts || (trendingProducts && trendingProducts.length > 0)) && (
       <AnimatedSection className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-12">
@@ -180,12 +206,22 @@ export default function Home() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
               {trendingProducts?.map((product, index) => (
                 <Link to={`/product/${product.id}`} key={product.id} className="group relative block rounded-2xl overflow-hidden bg-cream">
-                  <div className="aspect-[4/5] overflow-hidden">
-                    <img src={product.images[0] || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80'} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="aspect-[4/5] overflow-hidden bg-navy/5 flex items-center justify-center">
+                    {product.images && product.images.length > 0 ? (
+                        <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    ) : (
+                        <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
+                    )}
                   </div>
                   <div className="p-4 bg-white">
-                    <h3 className="font-sans font-medium text-ink truncate mb-1">{product.title}</h3>
-                    <p className="font-serif italic text-muted-foreground text-sm mb-3 truncate">{product.category}</p>
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-sans font-medium text-ink truncate pr-2">{product.title}</h3>
+                      <div className="flex items-center text-gold shrink-0">
+                        <span className="text-xs font-bold mr-1">{product.rating || 5.0}</span>
+                        <Star className="w-3 h-3 fill-current" />
+                      </div>
+                    </div>
+                    <p className="font-serif italic text-muted-foreground text-sm mb-3 truncate">By {product.sellerName || 'Artisan'} &bull; {product.category}</p>
                     <p className="font-heading font-semibold text-lg text-gold">{formatPrice(product.price)}</p>
                   </div>
                 </Link>
@@ -194,6 +230,55 @@ export default function Home() {
           )}
         </div>
       </AnimatedSection>
+      )}
+
+      {/* New Arrivals */}
+      {(loadingNewArrivals || (newArrivals && newArrivals.length > 0)) && (
+      <AnimatedSection className="py-24 bg-cream">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="font-heading text-4xl lg:text-5xl text-ink font-bold mb-3">Freshly Crafted</h2>
+              <p className="font-serif italic text-muted-foreground text-lg">New arrivals from the workshops.</p>
+            </div>
+            <Link to="/explore" className="hidden sm:flex text-gold font-semibold items-center gap-2 hover:gap-3 transition-all">
+              <span className="hover-underline">View All</span> <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {loadingNewArrivals ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
+              {[...Array(4)].map((_,i) => <Skeleton key={i} className="h-[400px] rounded-2xl" />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
+              {newArrivals?.map((product, index) => (
+                <Link to={`/product/${product.id}`} key={product.id} className="group relative block rounded-2xl overflow-hidden bg-white">
+                  <div className="aspect-[4/5] overflow-hidden bg-navy/5 flex items-center justify-center">
+                    {product.images && product.images.length > 0 ? (
+                        <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    ) : (
+                        <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
+                    )}
+                  </div>
+                  <div className="p-4 bg-white border border-border/50">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-sans font-medium text-ink truncate pr-2">{product.title}</h3>
+                      <div className="flex items-center text-gold shrink-0">
+                        <span className="text-xs font-bold mr-1">{product.rating || 5.0}</span>
+                        <Star className="w-3 h-3 fill-current" />
+                      </div>
+                    </div>
+                    <p className="font-serif italic text-muted-foreground text-sm mb-3 truncate">By {product.sellerName || 'Artisan'} &bull; {product.category}</p>
+                    <p className="font-heading font-semibold text-lg text-gold">{formatPrice(product.price)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </AnimatedSection>
+      )}
 
       {/* Story Banner */}
       <AnimatedSection className="bg-ink text-gold py-24 relative overflow-hidden">

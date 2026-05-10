@@ -12,7 +12,7 @@ import {
 import { auth } from '@/lib/firebase/config';
 
 export default function Navbar() {
-  const { user } = useAuthStore();
+  const { user, mode, setMode } = useAuthStore();
   const { items } = useCartStore();
   const navigate = useNavigate();
   const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -20,6 +20,15 @@ export default function Navbar() {
   const handleLogout = async () => {
     await auth.signOut();
     navigate('/');
+  };
+
+  const handleModeSwitch = (newMode: 'buyer' | 'seller') => {
+    setMode(newMode);
+    if (newMode === 'buyer') {
+      navigate('/', { replace: true });
+    } else {
+      navigate('/seller', { replace: true });
+    }
   };
 
   return (
@@ -49,8 +58,25 @@ export default function Navbar() {
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-5">
-          <button className="text-ink hover:text-gold transition-colors">
+        <div className="flex items-center gap-4">
+          {user?.role === 'both' && (
+             <div className="hidden lg:flex bg-sand p-1 rounded-full items-center border border-border mr-2">
+               <button 
+                 onClick={() => handleModeSwitch('buyer')} 
+                 className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase transition-colors ${mode === 'buyer' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground hover:text-primary'}`}
+               >
+                 🛍️ Buyer
+               </button>
+               <button 
+                 onClick={() => handleModeSwitch('seller')} 
+                 className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase transition-colors ${mode === 'seller' ? 'bg-[#1A237E] shadow-sm text-white' : 'text-muted-foreground hover:text-primary'}`}
+               >
+                 🏪 Seller
+               </button>
+             </div>
+          )}
+
+          <button className="text-ink hover:text-gold transition-colors hidden sm:block">
             <Search className="w-5 h-5" />
           </button>
           
@@ -60,20 +86,18 @@ export default function Navbar() {
 
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                <button className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full bg-cover overflow-hidden focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-cream">
+              <DropdownMenuTrigger className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full bg-cover overflow-hidden focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-cream">
                   {user.photoURL ? (
                     <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <span>{user.email?.[0].toUpperCase() || 'M'}</span>
                   )}
-                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-white border border-primary/10 rounded-xl shadow-lg mt-2">
                 <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">My Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/orders')} className="cursor-pointer">My Orders</DropdownMenuItem>
                 {user.role === 'seller' || user.role === 'both' ? (
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')} className="cursor-pointer">Seller Dashboard</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/seller')} className="cursor-pointer font-bold text-gold">Seller Dashboard</DropdownMenuItem>
                 ) : null}
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">Logout</DropdownMenuItem>
               </DropdownMenuContent>

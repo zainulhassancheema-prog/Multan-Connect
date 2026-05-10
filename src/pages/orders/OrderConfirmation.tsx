@@ -57,7 +57,7 @@ export default function OrderConfirmation() {
            </div>
            <div className="text-right">
              <p className="text-muted-foreground uppercase tracking-widest text-xs mb-1">Date</p>
-             <p className="font-medium">{format(order.createdAt, 'MMM dd, yyyy')}</p>
+             <p className="font-medium">{order.createdAt?.toMillis ? format(order.createdAt.toMillis(), 'MMM dd, yyyy') : 'Recently'}</p>
            </div>
          </div>
 
@@ -66,7 +66,13 @@ export default function OrderConfirmation() {
            {order.items.map((item, idx) => (
              <div key={idx} className="flex justify-between py-2 border-b border-border/30 last:border-0 items-center">
                 <div className="flex items-center gap-4">
-                   <img src={item.image} alt={item.title} className="w-10 h-10 rounded-md object-cover bg-muted" />
+                   <div className="w-10 h-10 rounded-md overflow-hidden bg-navy/5 flex items-center justify-center shrink-0">
+                     {item.imageUrl || item.image ? (
+                       <img src={item.imageUrl || item.image} alt={item.title} className="w-full h-full object-cover" />
+                     ) : (
+                       <span className="text-[10px] font-heading font-bold italic text-navy/40">MC</span>
+                     )}
+                   </div>
                    <span className="text-sm font-medium">{item.title} <span className="text-muted-foreground ml-2">x{item.quantity}</span></span>
                 </div>
                 <span className="font-mono text-sm">{formatPrice(item.price * item.quantity)}</span>

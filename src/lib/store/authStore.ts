@@ -7,25 +7,48 @@ import { User, Role } from '../types';
 interface AuthState {
   user: (FirebaseUser & { role?: Role; isVerifiedArtisan?: boolean }) | null;
   loading: boolean;
+  mode: 'buyer' | 'seller';
   setUser: (user: FirebaseUser | null) => void;
   fetchAndSetUserData: (uid: string) => Promise<void>;
   clearUser: () => void;
+  setMode: (mode: 'buyer' | 'seller') => void;
 }
+
+const getInitialMode = (): 'buyer' | 'seller' => {
+  const saved = localStorage.getItem('multan_connect_mode');
+  return saved === 'seller' ? 'seller' : 'buyer';
+};
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: true,
-  setUser: (user) => set({ user, loading: false }),
+  mode: getInitialMode(),
+  setMode: (mode) => {
+    localStorage.setItem('multan_connect_mode', mode);
+    set({ mode });
+  },
+  setUser: (user) => set((state) => ({ user: user ? { ...user, role: state.user?.role, isVerifiedArtisan: state.user?.isVerifiedArtisan } : null })),
   fetchAndSetUserData: async (uid: string) => {
     try {
       const docRef = doc(db, 'users', uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data() as User;
-        set((state) => ({
-          user: state.user ? { ...state.user, role: data.role, isVerifiedArtisan: data.isVerifiedArtisan } : null,
-          loading: false
-        }));
+        
+        let targetMode = getInitialMode();
+        if (data.role === 'seller' && targetMode !== 'seller') targetMode = 'seller';
+        if (data.role === 'buyer' && targetMode !== 'buyer') targetMode = 'buyer';
+
+        set((state) => {
+          const userObj = state.user ? { ...state.user, role: data.role, isVerifiedArtisan: data.isVerifiedArtisan } : null;
+          return {
+            user: userObj,
+            mode: data.role === 'both' ? getInitialMode() : targetMode,
+            loading: false
+          };
+        });
+      } else {
+        set({ loading: false });
       }
     } catch (err) {
       console.error('Error fetching user data', err);
@@ -43,6 +66,8 @@ if (auth?.onAuthStateChanged) {
         useAuthStore.getState().setUser(user);
         if (db) {
            await useAuthStore.getState().fetchAndSetUserData(user.uid);
+        } else {
+           useAuthStore.setState({ loading: false });
         }
       } else {
         useAuthStore.getState().clearUser();
