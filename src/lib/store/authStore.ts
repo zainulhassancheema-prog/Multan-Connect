@@ -5,10 +5,10 @@ import { doc, getDoc } from 'firebase/firestore';
 import { User, Role } from '../types';
 
 interface AuthState {
-  user: (FirebaseUser & { role?: Role; isVerifiedArtisan?: boolean }) | null;
+  user: (FirebaseUser & Partial<User>) | null;
   loading: boolean;
   mode: 'buyer' | 'seller';
-  setUser: (user: FirebaseUser | null) => void;
+  setUser: (user: Partial<FirebaseUser & Partial<User>> | null) => void;
   fetchAndSetUserData: (uid: string) => Promise<void>;
   clearUser: () => void;
   setMode: (mode: 'buyer' | 'seller') => void;
@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.setItem('multan_connect_mode', mode);
     set({ mode });
   },
-  setUser: (user) => set((state) => ({ user: user ? { ...user, role: state.user?.role, isVerifiedArtisan: state.user?.isVerifiedArtisan } : null })),
+  setUser: (user) => set((state) => ({ user: user ? { ...state.user, ...user } as any : null })),
   fetchAndSetUserData: async (uid: string) => {
     try {
       const docRef = doc(db, 'users', uid);
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (data.role === 'buyer' && targetMode !== 'buyer') targetMode = 'buyer';
 
         set((state) => {
-          const userObj = state.user ? { ...state.user, role: data.role, isVerifiedArtisan: data.isVerifiedArtisan } : null;
+          const userObj = state.user ? { ...state.user, ...data } : null;
           return {
             user: userObj,
             mode: data.role === 'both' ? getInitialMode() : targetMode,

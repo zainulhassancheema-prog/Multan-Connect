@@ -120,56 +120,74 @@ export default function Cart() {
           {isLoading ? (
             <p className="font-serif italic text-muted-foreground">Loading items...</p>
           ) : (
-            activeItems.map((item) => {
-              const product = cartProducts?.find(p => p.id === item.productId);
-              const isMissingOrUnavailable = !product || product.missing || !product.isAvailable;
-              
-              const displayImage = product && !product.missing ? product.images?.[0] || item.imageUrl : item.imageUrl;
-              const displayTitle = product && !product.missing ? product.title : item.title || 'Unknown Product';
-              const displayCategory = product && !product.missing ? product.category : '';
-              const displayPrice = product && !product.missing ? product.price : item.price;
-              const maxStock = product && !product.missing ? product.stock : 1;
-              
-              return (
-                <div key={item.productId} className={`flex gap-6 items-center ${isMissingOrUnavailable ? 'opacity-50 grayscale' : ''}`}>
-                  <div className="w-24 h-32 md:w-32 md:h-40 rounded-xl overflow-hidden shrink-0 border border-border bg-navy/5 flex items-center justify-center">
-                    {displayImage ? (
-                      <img src={displayImage} alt={displayTitle} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <Link to={isMissingOrUnavailable ? '#' : `/product/${item.productId}`} className="font-sans font-medium text-lg hover:text-gold transition-colors">{displayTitle}</Link>
-                    {displayCategory && <p className="font-serif text-muted-foreground italic text-sm mb-2">{displayCategory}</p>}
-                    
-                    {isMissingOrUnavailable ? (
-                      <div className="flex items-center gap-2 text-destructive text-sm mb-4 bg-destructive/10 w-fit px-3 py-1 rounded-full">
-                         <AlertTriangle className="w-4 h-4" />
-                         <span>This item is no longer available</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-4 mt-4">
-                        <div className="flex items-center gap-3 border border-border rounded-full p-1 bg-white">
-                          <button onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center">-</button>
-                          <span className="w-4 text-center font-mono">{item.quantity}</span>
-                          <button onClick={() => handleUpdateQuantity(item.productId, Math.min(maxStock, item.quantity + 1))} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center">+</button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-col items-end gap-4">
-                    <p className="font-sans font-bold text-lg">
-                      {isMissingOrUnavailable ? '—' : formatPrice(displayPrice * item.quantity)}
-                    </p>
-                    <button onClick={() => handleRemove(item.productId)} className="text-muted-foreground hover:text-destructive p-2 mt-auto">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+            Object.entries(
+              activeItems.reduce((acc, item) => {
+                const product = cartProducts?.find(p => p.id === item.productId);
+                const shopName = (product && !product.missing ? product.shopName || product.sellerName : item.sellerName) || 'Unknown Shop';
+                if (!acc[shopName]) acc[shopName] = [];
+                acc[shopName].push(item);
+                return acc;
+              }, {} as Record<string, typeof activeItems>)
+            ).map(([shopName, items]) => (
+              <div key={shopName} className="mb-12">
+                <div className="flex items-center gap-4 mb-6">
+                  <h2 className="font-heading font-bold text-xl text-ink whitespace-nowrap">{shopName}</h2>
+                  <div className="h-px bg-border flex-1"></div>
                 </div>
-              );
-            })
+                <div className="space-y-6">
+                {((items as any) || []).map((item: any) => {
+                  const product = cartProducts?.find(p => p.id === item.productId);
+                  const isMissingOrUnavailable = !product || product.missing || !product.isAvailable;
+                  
+                  const displayImage = product && !product.missing ? product.images?.[0] || item.imageUrl : item.imageUrl;
+                  const displayTitle = product && !product.missing ? product.title : item.title || 'Unknown Product';
+                  const displayCategory = product && !product.missing ? product.category : '';
+                  const displayPrice = product && !product.missing ? product.price : item.price;
+                  const maxStock = product && !product.missing ? product.stock : 1;
+                  
+                  return (
+                    <div key={item.productId} className={`flex gap-6 items-center ${isMissingOrUnavailable ? 'opacity-50 grayscale' : ''}`}>
+                      <div className="w-24 h-32 md:w-32 md:h-40 rounded-xl overflow-hidden shrink-0 border border-border bg-navy/5 flex items-center justify-center">
+                        {displayImage ? (
+                          <img src={displayImage} alt={displayTitle} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <Link to={isMissingOrUnavailable ? '#' : `/product/${item.productId}`} className="font-sans font-medium text-lg hover:text-gold transition-colors">{displayTitle}</Link>
+                        {displayCategory && <p className="font-serif text-muted-foreground italic text-sm mb-2">{displayCategory}</p>}
+                        
+                        {isMissingOrUnavailable ? (
+                          <div className="flex items-center gap-2 text-destructive text-sm mb-4 bg-destructive/10 w-fit px-3 py-1 rounded-full">
+                             <AlertTriangle className="w-4 h-4" />
+                             <span>This item is no longer available</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-4 mt-4">
+                            <div className="flex items-center gap-3 border border-border rounded-full p-1 bg-white">
+                              <button onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center">-</button>
+                              <span className="w-4 text-center font-mono">{item.quantity}</span>
+                              <button onClick={() => handleUpdateQuantity(item.productId, Math.min(maxStock, item.quantity + 1))} className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center">+</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col items-end gap-4">
+                        <p className="font-sans font-bold text-lg">
+                          {isMissingOrUnavailable ? '—' : formatPrice(displayPrice * item.quantity)}
+                        </p>
+                        <button onClick={() => handleRemove(item.productId)} className="text-muted-foreground hover:text-destructive p-2 mt-auto">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                </div>
+              </div>
+            ))
           )}
         </div>
         

@@ -73,7 +73,7 @@ export default function ProductDetail() {
             title: product.title,
             price: product.price,
             imageUrl: product.images?.[0] || "",
-            sellerName: product.sellerName || artisan?.displayName || 'Artisan',
+            sellerName: product.shopName || product.sellerName || artisan?.shopName || artisan?.displayName || 'Artisan',
             sellerId: product.sellerId,
             quantity: increment(quantity),
             addedAt: serverTimestamp()
@@ -88,7 +88,7 @@ export default function ProductDetail() {
          title: product.title,
          price: product.price,
          imageUrl: product.images?.[0] || "",
-         sellerName: product.sellerName || artisan?.displayName || 'Artisan',
+         sellerName: product.shopName || product.sellerName || artisan?.shopName || artisan?.displayName || 'Artisan',
          sellerId: product.sellerId,
          quantity,
          addedAt: Date.now()
@@ -191,12 +191,18 @@ export default function ProductDetail() {
             <div className="mt-auto border-t border-border pt-8">
               <span className="font-sans tracking-widest uppercase text-xs text-muted-foreground mb-4 block">Crafted By</span>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                  <img src={artisan.photoURL || 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?auto=format&fit=crop&q=80'} alt={artisan.displayName} className="w-full h-full object-cover" />
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center bg-navy" style={!artisan.shopLogoUrl && !artisan.photoURL ? { backgroundColor: '#1A237E' } : {}}>
+                  {artisan.shopLogoUrl ? (
+                    <img src={artisan.shopLogoUrl} alt={artisan.shopName} className="w-full h-full object-cover bg-white" />
+                  ) : artisan.photoURL ? (
+                     <img src={artisan.photoURL} alt={artisan.shopName || artisan.displayName} className="w-full h-full object-cover bg-white" />
+                  ) : (
+                    <span className="text-xl font-heading font-bold text-white">{artisan.shopName?.charAt(0) || artisan.displayName?.charAt(0) || 'M'}</span>
+                  )}
                 </div>
                 <div>
-                  <Link to={`/artisan/${product.sellerId}`} className="font-heading font-bold text-xl hover:text-gold transition-colors block">{artisan.displayName}</Link>
-                  <span className="font-serif italic text-muted-foreground text-sm">{artisan.craftSpecialty || artisan.craftType || 'Master Artisan'} &bull; {artisan.workshopLocation || product.location || 'Multan'}</span>
+                  <Link to={`/artisan/${artisan.shopHandle || artisan.uid}`} className="font-heading font-bold text-xl hover:text-gold transition-colors block">{artisan.shopName || artisan.displayName}</Link>
+                  <span className="font-serif italic text-muted-foreground text-sm">{artisan.shopBio || `${artisan.craftSpecialty || artisan.craftType?.replace('_', ' ') || 'Master Artisan'} • ${artisan.shopLocation || artisan.workshopLocation || product.location || 'Multan'}`}</span>
                 </div>
               </div>
             </div>

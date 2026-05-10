@@ -195,7 +195,7 @@ export default function Explore() {
                           <Star className="w-3 h-3 fill-current" />
                         </div>
                       </div>
-                      <p className="font-serif italic text-muted-foreground text-sm truncate mb-2">By {product.sellerName || 'Artisan'} &bull; {product.location || 'Multan'}</p>
+                      <p className="font-serif italic text-muted-foreground text-sm truncate mb-2">By {product.shopName || product.sellerName || 'Artisan'} &bull; {product.location || 'Multan'}</p>
                       <p className="font-heading font-semibold text-gold mt-auto">{formatPrice(product.price)}</p>
                     </Link>
                   ))}

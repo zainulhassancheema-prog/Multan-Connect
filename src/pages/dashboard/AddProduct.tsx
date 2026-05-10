@@ -64,6 +64,9 @@ export default function AddProduct() {
 
       const docRef = await addDoc(collection(db, 'products'), {
         sellerId: user.uid,
+        sellerName: user.shopName || user.displayName, // fallback
+        shopName: user.shopName || user.displayName, // ensure product has shopName
+        sellerPhotoUrl: user.shopLogoUrl || user.photoURL || '',
         title,
         description,
         price: nPrice,
@@ -73,6 +76,7 @@ export default function AddProduct() {
         images: imageUrls,
         isAvailable: true,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       
       return docRef.id;

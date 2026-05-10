@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import RootLayout from '@/layouts/RootLayout';
@@ -26,8 +26,15 @@ import DashboardHome from '@/pages/dashboard/DashboardHome';
 import Listings from '@/pages/dashboard/Listings';
 import AddProduct from '@/pages/dashboard/AddProduct';
 import SellerOrders from '@/pages/dashboard/SellerOrders';
+import SetupShop from '@/pages/dashboard/SetupShop';
+import SellerProfile from '@/pages/dashboard/SellerProfile';
+import SellerSettings from '@/pages/dashboard/SellerSettings';
+import SellerReviews from '@/pages/dashboard/SellerReviews';
+import SellerMessages from '@/pages/dashboard/SellerMessages';
+import SellerAnalytics from '@/pages/dashboard/SellerAnalytics';
 
 import ArtisansList from '@/pages/ArtisansList';
+
 import OurStory from '@/pages/OurStory';
 import StaticPage from '@/pages/StaticPage';
 
@@ -36,6 +43,7 @@ const queryClient = new QueryClient();
 // Protected Route Wrapper for Seller Workspace
 function RequireSeller({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
+  const location = useLocation();
   
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!user) return <Navigate to="/login?redirect=/seller" replace />;
@@ -43,6 +51,13 @@ function RequireSeller({ children }: { children: React.ReactNode }) {
      // User is not authorized to see seller space
      return <Navigate to="/" replace />;
   }
+
+  if ((user.role === 'seller' || user.role === 'both') && (!user.shopName || user.shopName.trim() === '')) {
+     if (location.pathname !== '/seller/setup-shop') {
+       return <Navigate to="/seller/setup-shop" replace />;
+     }
+  }
+
   return children;
 }
 
@@ -65,7 +80,7 @@ export default function App() {
             <Route path="/privacy" element={<StaticPage title="Privacy Policy" />} />
             <Route path="/shipping" element={<StaticPage title="Shipping & Returns" />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/artisan/:id" element={<ArtisanProfile />} />
+            <Route path="/artisan/:handle" element={<ArtisanProfile />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/profile" element={<Profile />} />
@@ -73,12 +88,23 @@ export default function App() {
             <Route path="/orders/:id/confirmation" element={<OrderConfirmation />} />
           </Route>
           
+          {/* Standalone Setup Shop */}
+          <Route path="/seller/setup-shop" element={
+            <RequireSeller>
+              <SetupShop />
+            </RequireSeller>
+          } />
+
           <Route path="/seller" element={<RequireSeller><DashboardLayout /></RequireSeller>}>
             <Route index element={<DashboardHome />} />
             <Route path="listings" element={<Listings />} />
             <Route path="add-product" element={<AddProduct />} />
             <Route path="orders" element={<SellerOrders />} />
-            {/* Additional seller routes to be built: profile, settings, etc */}
+            <Route path="profile" element={<SellerProfile />} />
+            <Route path="settings" element={<SellerSettings />} />
+            <Route path="reviews" element={<SellerReviews />} />
+            <Route path="messages" element={<SellerMessages />} />
+            <Route path="analytics" element={<SellerAnalytics />} />
             <Route path="*" element={<div className="p-8">Page under construction...</div>} />
           </Route>
         </Routes>

@@ -204,25 +204,37 @@ export default function Checkout() {
         <div className="w-full lg:w-96">
            <div className="bg-white rounded-3xl p-8 sticky top-24 border border-border/50 shadow-sm">
              <h3 className="font-heading font-medium text-lg mb-6">In your cart</h3>
-             <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto no-scrollbar">
-               {cartItems.map(item => {
-                 return (
-                   <div key={item.productId} className="flex gap-4 items-center">
-                     <div className="w-16 h-16 rounded-md overflow-hidden bg-navy/5 flex items-center justify-center">
-                        {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="font-heading font-bold italic text-navy/40">MC</span>
-                        )}
-                     </div>
-                     <div className="flex-1 text-sm">
-                        <p className="font-medium truncate">{item.title}</p>
-                        <p className="text-muted-foreground italic font-serif">Qty: {item.quantity}</p>
-                     </div>
-                     <span className="font-bold text-sm tracking-tighter">{formatPrice(item.price * item.quantity)}</span>
+             <div className="space-y-6 mb-6 max-h-[40vh] overflow-y-auto no-scrollbar">
+               {Object.entries(
+                 cartItems.reduce((acc, item) => {
+                   const shopName = item.sellerName || 'Unknown Shop';
+                   if (!acc[shopName]) acc[shopName] = [];
+                   acc[shopName].push(item);
+                   return acc;
+                 }, {} as Record<string, typeof cartItems>)
+               ).map(([shopName, items]) => (
+                 <div key={shopName}>
+                   <div className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-3 border-b border-border pb-1">{shopName}</div>
+                   <div className="space-y-4">
+                     {((items as any[]) || []).map((item: any) => (
+                       <div key={item.productId} className="flex gap-4 items-center">
+                         <div className="w-16 h-16 rounded-md overflow-hidden bg-navy/5 flex items-center justify-center shrink-0">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="font-heading font-bold italic text-navy/40">MC</span>
+                            )}
+                         </div>
+                         <div className="flex-1 text-sm overflow-hidden">
+                            <p className="font-medium truncate">{item.title}</p>
+                            <p className="text-muted-foreground italic font-serif">Qty: {item.quantity}</p>
+                         </div>
+                         <span className="font-bold text-sm tracking-tighter shrink-0">{formatPrice(item.price * item.quantity)}</span>
+                       </div>
+                     ))}
                    </div>
-                 )
-               })}
+                 </div>
+               ))}
              </div>
              
              <div className="border-t border-border pt-4 text-sm space-y-2 mb-4">

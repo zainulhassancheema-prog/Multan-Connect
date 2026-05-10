@@ -42,14 +42,28 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA]">
-      <div className="w-64 bg-[#1A237E] h-screen sticky top-0 shadow-lg z-10 hidden md:block">
-        <div className="p-6">
+      <div className="w-64 bg-[#1A237E] h-screen sticky top-0 shadow-lg z-10 hidden md:block flex flex-col">
+        <div className="p-6 border-b border-[#283593]">
           <Link to="/seller">
-             <h2 className="text-xl font-heading font-bold text-white italic mb-2">Multan Connect</h2>
+             <h2 className="text-xl font-heading font-bold text-white italic mb-4">Multan Connect</h2>
           </Link>
-          <p className="text-xs font-sans text-white/70 uppercase tracking-widest">Seller Workspace</p>
+          <div className="flex items-center gap-3 mt-4">
+             <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10 shrink-0 flex items-center justify-center">
+                {user?.shopLogoUrl ? (
+                  <img src={user.shopLogoUrl} alt={user?.shopName} className="w-full h-full object-cover" />
+                ) : user?.photoURL ? (
+                  <img src={user.photoURL} alt={user?.displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl font-heading font-bold text-white">{user?.shopName?.charAt(0) || user?.displayName?.charAt(0) || 'M'}</span>
+                )}
+             </div>
+             <div className="overflow-hidden">
+                <p className="font-heading font-bold text-white text-lg truncate" title={user?.shopName || user?.displayName}>{user?.shopName || user?.displayName}</p>
+                <p className="text-[#00BCD4] text-[10px] font-sans uppercase tracking-wider truncate" title={`${user?.craftType || 'Seller'} • ${user?.shopLocation || 'Multan'}`}>{user?.craftType?.replace('_', ' ') || 'Seller'} • {user?.shopLocation || 'Multan'}</p>
+             </div>
+          </div>
         </div>
-        <nav className="px-3 py-4 space-y-1 mt-2">
+        <nav className="px-3 py-4 space-y-1 mt-2 flex-1 overflow-y-auto">
           {links.map(link => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path;

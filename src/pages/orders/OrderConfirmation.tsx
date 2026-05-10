@@ -67,8 +67,8 @@ export default function OrderConfirmation() {
              <div key={idx} className="flex justify-between py-2 border-b border-border/30 last:border-0 items-center">
                 <div className="flex items-center gap-4">
                    <div className="w-10 h-10 rounded-md overflow-hidden bg-navy/5 flex items-center justify-center shrink-0">
-                     {item.imageUrl || item.image ? (
-                       <img src={item.imageUrl || item.image} alt={item.title} className="w-full h-full object-cover" />
+                     {item.imageUrl ? (
+                       <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                      ) : (
                        <span className="text-[10px] font-heading font-bold italic text-navy/40">MC</span>
                      )}

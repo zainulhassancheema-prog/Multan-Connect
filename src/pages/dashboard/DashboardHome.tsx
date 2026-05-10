@@ -11,10 +11,10 @@ export default function DashboardHome() {
       <div className="bg-white rounded-3xl p-8 border border-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
          <div>
             <h1 className="font-heading font-bold text-4xl text-primary mb-2 tracking-tight">
-               Good morning, <span className="font-serif italic">{user?.displayName?.split(' ')[0]}</span>
+               Good morning, <span className="font-serif italic text-gold">{user?.shopName || user?.displayName?.split(' ')[0]}</span>
             </h1>
-            <p className="text-gold font-bold uppercase tracking-widest text-sm">
-               {user?.craftType || 'Artisan'} • {user?.workshopLocation || 'Multan'}
+            <p className="text-muted-foreground font-sans uppercase tracking-widest text-sm">
+               {user?.craftType?.replace('_', ' ') || 'Artisan'} • {user?.shopLocation || 'Multan'}
             </p>
          </div>
          <div className="flex flex-wrap gap-3">

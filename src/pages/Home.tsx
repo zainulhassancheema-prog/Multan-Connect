@@ -166,15 +166,21 @@ export default function Home() {
                 key={artisan.uid} 
                 className="bg-white rounded-[2rem] p-6 text-center shadow-sm border border-border/50 hover:shadow-xl hover:border-gold/30 transition-all duration-300 group"
               >
-                <div className="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4 border-4 border-cream group-hover:border-gold/20 transition-colors">
-                  <img src={artisan.photoURL || 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?auto=format&fit=crop&q=80'} alt={artisan.displayName} className="w-full h-full object-cover" />
+                <div className="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4 border-4 border-cream group-hover:border-gold/20 transition-colors flex items-center justify-center bg-navy" style={!artisan.shopLogoUrl && !artisan.photoURL ? { backgroundColor: '#1A237E' } : {}}>
+                  {artisan.shopLogoUrl ? (
+                    <img src={artisan.shopLogoUrl} alt={artisan.shopName} className="w-full h-full object-cover bg-white" />
+                  ) : artisan.photoURL ? (
+                     <img src={artisan.photoURL} alt={artisan.shopName || artisan.displayName} className="w-full h-full object-cover bg-white" />
+                  ) : (
+                    <span className="text-3xl font-heading font-bold text-white">{artisan.shopName?.charAt(0) || artisan.displayName?.charAt(0) || 'M'}</span>
+                  )}
                 </div>
-                <h3 className="font-heading font-bold text-xl text-ink mb-1">{artisan.displayName}</h3>
-                <p className="font-serif italic text-gold text-sm mb-4">{artisan.craftSpecialty || artisan.craftType || 'Master Artisan'}</p>
+                <h3 className="font-heading font-bold text-xl text-ink mb-1">{artisan.shopName || artisan.displayName}</h3>
+                <p className="font-serif italic text-gold text-sm mb-4">{artisan.craftSpecialty || artisan.craftType?.replace('_', ' ') || 'Master Artisan'}</p>
                 <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs uppercase tracking-wider mb-6">
-                  <span>★ {artisan.totalSales || 0} Sales</span>
+                  <span className="truncate max-w-full">{artisan.shopLocation || artisan.workshopLocation || 'Multan'}</span>
                 </div>
-                <Button onClick={() => window.location.href = `/artisan/${artisan.uid}`} variant="outline" className="rounded-full w-full border-ink text-ink hover:bg-ink hover:text-white transition-colors">
+                <Button onClick={() => window.location.href = `/artisan/${artisan.shopHandle || artisan.uid}`} variant="outline" className="rounded-full w-full border-ink text-ink hover:bg-ink hover:text-white transition-colors">
                   View Shop
                 </Button>
               </motion.div>
@@ -221,7 +227,7 @@ export default function Home() {
                         <Star className="w-3 h-3 fill-current" />
                       </div>
                     </div>
-                    <p className="font-serif italic text-muted-foreground text-sm mb-3 truncate">By {product.sellerName || 'Artisan'} &bull; {product.category}</p>
+                    <p className="font-serif italic text-muted-foreground text-sm mb-3 truncate">By {product.shopName || product.sellerName || 'Artisan'} &bull; {product.category}</p>
                     <p className="font-heading font-semibold text-lg text-gold">{formatPrice(product.price)}</p>
                   </div>
                 </Link>
@@ -269,7 +275,7 @@ export default function Home() {
                         <Star className="w-3 h-3 fill-current" />
                       </div>
                     </div>
-                    <p className="font-serif italic text-muted-foreground text-sm mb-3 truncate">By {product.sellerName || 'Artisan'} &bull; {product.category}</p>
+                    <p className="font-serif italic text-muted-foreground text-sm mb-3 truncate">By {product.shopName || product.sellerName || 'Artisan'} &bull; {product.category}</p>
                     <p className="font-heading font-semibold text-lg text-gold">{formatPrice(product.price)}</p>
                   </div>
                 </Link>

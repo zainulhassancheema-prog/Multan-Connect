@@ -9,6 +9,13 @@ export interface User {
   photoURL?: string;
   role: Role;
   isVerifiedArtisan?: boolean;
+  shopName?: string;
+  shopHandle?: string;
+  shopBio?: string;
+  shopLogoUrl?: string;
+  shopBannerUrl?: string;
+  shopLocation?: string;
+  shopCreatedAt?: Timestamp | number | any;
   craftType?: string;
   craftSpecialty?: string;
   workshopLocation?: string;
@@ -24,6 +31,7 @@ export interface Product {
   id: string;
   sellerId: string;
   sellerName: string;
+  shopName?: string;
   sellerPhotoUrl: string;
   title: string;
   description: string;
