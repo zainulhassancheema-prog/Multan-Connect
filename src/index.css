@@ -91,3 +91,16 @@
     @apply font-heading;
   }
 }
+
+@layer utilities {
+  .hover-underline {
+    @apply relative overflow-hidden;
+  }
+  .hover-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-[1px] bg-current origin-bottom-right scale-x-0 transition-transform duration-300 ease-out;
+  }
+  .hover-underline:hover::after {
+    @apply origin-bottom-left scale-x-100;
+  }
+}

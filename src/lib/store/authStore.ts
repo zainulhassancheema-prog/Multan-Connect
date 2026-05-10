@@ -36,11 +36,22 @@ export const useAuthStore = create<AuthState>((set) => ({
 }));
 
 // Setup listener
-auth.onAuthStateChanged(async (user) => {
-  if (user) {
-    useAuthStore.getState().setUser(user);
-    await useAuthStore.getState().fetchAndSetUserData(user.uid);
-  } else {
+if (auth?.onAuthStateChanged) {
+  try {
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        useAuthStore.getState().setUser(user);
+        if (db) {
+           await useAuthStore.getState().fetchAndSetUserData(user.uid);
+        }
+      } else {
+        useAuthStore.getState().clearUser();
+      }
+    });
+  } catch (error) {
+    console.warn('Firebase auth listener failed to initialize', error);
     useAuthStore.getState().clearUser();
   }
-});
+} else {
+  useAuthStore.getState().clearUser();
+}

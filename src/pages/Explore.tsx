@@ -75,10 +75,10 @@ export default function Explore() {
             <div>
               <h3 className="font-sans font-semibold tracking-widest uppercase text-xs mb-4 text-ink">Categories</h3>
               <ul className="space-y-3 font-serif text-muted-foreground">
-                <li><button onClick={() => setSearchParams({})} className={`hover:text-gold transition-colors ${!categoryFilter ? 'text-gold italic font-medium' : ''}`}>All Crafts</button></li>
-                <li><button onClick={() => setSearchParams({category:'Blue Pottery'})} className={`hover:text-gold transition-colors ${categoryFilter==='Blue Pottery' ? 'text-gold italic font-medium' : ''}`}>Blue Pottery</button></li>
-                <li><button onClick={() => setSearchParams({category:'Khussa'})} className={`hover:text-gold transition-colors ${categoryFilter==='Khussa' ? 'text-gold italic font-medium' : ''}`}>Khussa Footwear</button></li>
-                <li><button onClick={() => setSearchParams({category:'Embroidery'})} className={`hover:text-gold transition-colors ${categoryFilter==='Embroidery' ? 'text-gold italic font-medium' : ''}`}>Embroidery</button></li>
+                <li><button onClick={() => setSearchParams({})} className={`hover:text-gold transition-colors hover-underline ${!categoryFilter ? 'text-gold italic font-medium' : ''}`}>All Crafts</button></li>
+                <li><button onClick={() => setSearchParams({category:'Blue Pottery'})} className={`hover:text-gold transition-colors hover-underline ${categoryFilter==='Blue Pottery' ? 'text-gold italic font-medium' : ''}`}>Blue Pottery</button></li>
+                <li><button onClick={() => setSearchParams({category:'Khussa'})} className={`hover:text-gold transition-colors hover-underline ${categoryFilter==='Khussa' ? 'text-gold italic font-medium' : ''}`}>Khussa Footwear</button></li>
+                <li><button onClick={() => setSearchParams({category:'Embroidery'})} className={`hover:text-gold transition-colors hover-underline ${categoryFilter==='Embroidery' ? 'text-gold italic font-medium' : ''}`}>Embroidery</button></li>
               </ul>
             </div>
             
@@ -111,7 +111,7 @@ export default function Explore() {
                       <div className="aspect-[4/5] rounded-2xl overflow-hidden mb-4 bg-white border border-border">
                         <img src={product.images[0] || 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&q=80'} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       </div>
-                      <h3 className="font-sans font-medium text-ink truncate">{product.title}</h3>
+                      <h3 className="font-sans font-medium text-ink truncate group-hover:text-gold transition-colors">{product.title}</h3>
                       <p className="font-serif italic text-muted-foreground text-sm truncate mb-2">{product.location || 'Multan'}</p>
                       <p className="font-heading font-semibold text-gold mt-auto">{formatPrice(product.price)}</p>
                     </Link>
@@ -133,7 +133,7 @@ export default function Explore() {
             ) : (
               <div className="text-center py-24">
                 <p className="font-serif italic text-2xl text-muted-foreground mb-4">No pieces found in this category.</p>
-                <Button variant="link" onClick={() => setSearchParams({})} className="text-gold">Clear filters</Button>
+                <Button variant="link" onClick={() => setSearchParams({})} className="text-gold hover:text-ink hover-underline transition-colors">Clear filters</Button>
               </div>
             )}
           </div>

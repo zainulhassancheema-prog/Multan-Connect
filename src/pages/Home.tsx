@@ -44,7 +44,7 @@ export default function Home() {
             <p className="font-sans text-white/70 text-[18px] mb-12 max-w-[480px] leading-[1.6]">
               Direct access to Multan’s master artisans. Explore authentic Blue Pottery and hand-stitched Khussa shoes, crafted with 400 years of heritage.
             </p>
-            <Button onClick={() => window.location.href = '/explore'} className="bg-gold hover:bg-gold-light text-white font-bold uppercase tracking-[0.1em] text-[13px] px-10 py-7 w-fit h-auto rounded-none">
+            <Button onClick={() => window.location.href = '/explore'} className="bg-gold hover:bg-gold-light text-white font-bold uppercase tracking-[0.1em] text-[13px] px-10 py-7 w-fit h-auto rounded-full">
                 Explore the Market
             </Button>
             <div className="absolute w-[100px] h-[1px] bg-gold bottom-10 left-20 hidden lg:block"></div>
@@ -86,7 +86,7 @@ export default function Home() {
       </section>
 
       {/* Stats Bottom Bar */}
-      <section className="bg-white border-t border-black/5 h-auto lg:h-[120px] flex items-center">
+      <AnimatedSection className="bg-white border-t border-black/5 h-auto lg:h-[120px] flex items-center">
         <div className="container mx-auto px-4 lg:px-12 grid grid-cols-1 md:grid-cols-3 gap-6 py-8 lg:py-0">
           <div className="flex flex-col gap-1 md:border-r border-black/10 last:border-0 md:pr-10 justify-center">
             <span className="text-[11px] uppercase text-muted-foreground tracking-[0.1em] font-sans">Verified Artisans</span>
@@ -102,10 +102,10 @@ export default function Home() {
             <span className="font-accent italic text-[13px] text-gold">Third Generation Potter</span>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Category Strip */}
-      <section className="py-12 bg-cream border-t border-black/5">
+      <AnimatedSection className="py-12 bg-cream border-t border-black/5">
         <div className="container mx-auto px-4 overflow-x-auto pb-4 no-scrollbar">
           <div className="flex sm:grid sm:grid-cols-5 gap-6 min-w-max sm:min-w-0">
              {['Blue Pottery', 'Khussa', 'Embroidery', 'Gift Sets', 'New Arrivals'].map((cat, i) => (
@@ -118,7 +118,7 @@ export default function Home() {
              ))}
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Featured Artisans */}
       <AnimatedSection className="py-24 container mx-auto px-4">
@@ -168,7 +168,7 @@ export default function Home() {
               <p className="font-serif italic text-muted-foreground text-lg">Trending globally.</p>
             </div>
             <Link to="/explore" className="hidden sm:flex text-gold font-semibold items-center gap-2 hover:gap-3 transition-all">
-              View All <ArrowRight className="w-4 h-4" />
+              <span className="hover-underline">View All</span> <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -196,21 +196,21 @@ export default function Home() {
       </AnimatedSection>
 
       {/* Story Banner */}
-      <section className="bg-ink text-gold py-24 relative overflow-hidden">
+      <AnimatedSection className="bg-ink text-gold py-24 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
         <div className="container mx-auto px-4 relative z-10 flex flex-col items-center text-center max-w-3xl">
-          <div className="w-16 h-16 rounded-full overflow-hidden mb-8 border border-gold/30">
-            <img src="https://images.unsplash.com/photo-1533227268428-f9ed0900f953?auto=format&fit=crop&q=80" alt="Artisan quote" className="w-full h-full object-cover" />
+          <div className="w-16 h-16 rounded-full overflow-hidden mb-8 border border-gold/30 bg-white">
+            <img src="/Logo.jpeg" alt="Multan Connect Logo" className="w-full h-full object-contain" />
           </div>
           <p className="font-serif italic text-2xl md:text-4xl leading-relaxed mb-6">
             "We don't just paint clay. We breathe our history into it. Each brushstroke carries 400 years of Multani heritage."
           </p>
           <p className="font-sans text-sm tracking-[0.2em] uppercase text-white/50 mb-8">Ustad Raheem, Master Kashigar</p>
-          <Button variant="link" className="text-gold hover:text-white transition-colors text-lg italic font-serif">
+          <Button variant="link" className="text-gold hover:text-white transition-colors text-lg italic font-serif hover-underline">
             Read Their Stories <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
-      </section>
+      </AnimatedSection>
     </div>
   );
 }
