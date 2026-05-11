@@ -22,6 +22,8 @@ export interface User {
   yearsActive?: number;
   followerCount?: number;
   totalSales?: number;
+  rating?: number;
+  storyText?: string;
   bio?: string;
   workshopDescription?: string;
   createdAt: number;

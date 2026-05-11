@@ -19,6 +19,7 @@ export default function SellerProfile() {
   const [shopHandle, setShopHandle] = useState(user?.shopHandle || '');
   const [craftType, setCraftType] = useState(user?.craftType || 'blue_pottery');
   const [shopBio, setShopBio] = useState(user?.shopBio || '');
+  const [storyText, setStoryText] = useState(user?.storyText || '');
   const [shopLocation, setShopLocation] = useState(user?.shopLocation || '');
   
   // Logos tracking
@@ -79,6 +80,7 @@ export default function SellerProfile() {
         shopHandle: shopHandle.trim() || user.uid,
         craftType,
         shopBio: shopBio.trim(),
+        storyText: storyText.trim(),
         shopLocation,
         ...(newLogoUrl && { shopLogoUrl: newLogoUrl }),
         ...(newBannerUrl && { shopBannerUrl: newBannerUrl }),
@@ -132,6 +134,21 @@ export default function SellerProfile() {
             <div>
               <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Shop Tagline</Label>
               <Input value={shopBio} onChange={e => setShopBio(e.target.value)} maxLength={100} className="mt-1" placeholder="Handcrafted in Multan since 1987" />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Your Story (optional)</Label>
+              <p className="text-xs text-muted-foreground font-serif italic text-gold">
+                Tell buyers about your craft, your family history, your process. 
+                This appears on your public story page. Write as much as you like.
+              </p>
+              <textarea
+                value={storyText}
+                onChange={e => setStoryText(e.target.value)}
+                rows={8}
+                placeholder="I learned this craft from my father, who learned it from his father before him..."
+                className="w-full border border-gray-200 rounded-xl p-4 text-sm focus:border-gold focus:ring-1 focus:ring-gold resize-none mt-1"
+              />
             </div>
 
             <div>

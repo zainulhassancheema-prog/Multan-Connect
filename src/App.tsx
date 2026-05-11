@@ -35,6 +35,8 @@ import SellerAnalytics from '@/pages/dashboard/SellerAnalytics';
 
 import ArtisansList from '@/pages/ArtisansList';
 
+import Stories from '@/pages/Stories';
+import StoryDetail from '@/pages/StoryDetail';
 import OurStory from '@/pages/OurStory';
 import StaticPage from '@/pages/StaticPage';
 
@@ -73,6 +75,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/artisans" element={<ArtisansList />} />
+            <Route path="/stories" element={<Stories />} />
+            <Route path="/stories/:handle" element={<StoryDetail />} />
             <Route path="/our-story" element={<OurStory />} />
             <Route path="/sustainability" element={<StaticPage title="Sustainability" />} />
             <Route path="/contact" element={<StaticPage title="Contact Us" />} />

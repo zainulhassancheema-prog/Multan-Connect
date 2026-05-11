@@ -290,16 +290,28 @@ export default function Home() {
       <AnimatedSection className="bg-ink text-gold py-24 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]"></div>
         <div className="container mx-auto px-4 relative z-10 flex flex-col items-center text-center max-w-3xl">
-          <div className="w-16 h-16 rounded-full overflow-hidden mb-8 border border-gold/30 bg-white">
-            <img src="/Logo.jpeg" alt="Multan Connect Logo" className="w-full h-full object-contain" />
-          </div>
-          <p className="font-serif italic text-2xl md:text-4xl leading-relaxed mb-6">
-            "We don't just paint clay. We breathe our history into it. Each brushstroke carries 400 years of Multani heritage."
-          </p>
-          <p className="font-sans text-sm tracking-[0.2em] uppercase text-white/50 mb-8">Ustad Raheem, Master Kashigar</p>
-          <Button variant="link" className="text-gold hover:text-white transition-colors text-lg italic font-serif hover-underline">
-            Read Their Stories <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
+          {featuredArtisans && featuredArtisans.length > 0 ? (
+             <div className="flex flex-col items-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden mb-6 flex items-center justify-center bg-white border border-gold/30">
+                  <img src="/Logo.jpeg" className="w-full h-full object-cover scale-[1.75]" alt="Featured Artisan" />
+                </div>
+                <p className="font-serif italic text-2xl md:text-3xl lg:text-4xl leading-relaxed mb-6">
+                  "{featuredArtisans[0].shopBio || 'Each piece carries 400 years of Multani heritage.'}"
+                </p>
+             </div>
+          ) : (
+             <div className="flex flex-col items-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden mb-6 flex items-center justify-center bg-white border border-gold/30">
+                  <img src="/Logo.jpeg" className="w-full h-full object-cover scale-[1.75]" alt="Featured Artisan" />
+                </div>
+                <p className="font-serif italic text-2xl md:text-4xl leading-relaxed mb-6">
+                  "Each piece carries 400 years of Multani heritage."
+                </p>
+             </div>
+          )}
+          <Link to="/stories" className="inline-flex items-center gap-2 text-white border border-gold/50 hover:bg-gold hover:border-gold hover:text-navy px-8 py-3 rounded-xl transition-all duration-300 font-medium font-sans">
+            Read Their Stories <ArrowRight size={16} />
+          </Link>
         </div>
       </AnimatedSection>
     </div>
