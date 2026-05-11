@@ -17,7 +17,7 @@ export default function OurStory() {
             Our mission is simple: <strong>direct connection, fair trade, and cultural preservation.</strong>
           </p>
           <div className="my-12 flex justify-center">
-             <img src="https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80" alt="Multani Potter" className="rounded-xl shadow-lg border border-border" />
+             <img src="https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80" alt="Artisan shaping clay to create traditional Multani pottery" className="rounded-xl shadow-lg border border-border" />
           </div>
           <p className="mb-6">
             By creating this platform, we empower the ustads (master craftsmen) and the women who create intricate embroidery from their homes. Every purchase made on Multan Connect goes directly towards supporting these families, ensuring that the legacy of Multani crafts continues to thrive in the modern world.

@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/shared/BackButton';
 import { useAuthStore } from '@/lib/store/authStore';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -72,35 +73,6 @@ export default function Login() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    setLoading(true);
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      const userRef = doc(db, 'users', user.uid);
-      const snap = await getDoc(userRef);
-      if (!snap.exists()) {
-         await setDoc(userRef, {
-           uid: user.uid,
-           email: user.email,
-           displayName: user.displayName || 'User',
-           photoURL: user.photoURL || '',
-           role: 'buyer',
-           createdAt: Date.now()
-         });
-         redirectUser('buyer');
-      } else {
-         redirectUser(snap.data().role || 'buyer');
-      }
-    } catch (error: any) {
-      toast.error('Google Sign-In Failed', { description: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleResetPassword = async () => {
     const email = getValues('email');
     if (!email) return toast.error('Please enter your email address first.');
@@ -150,9 +122,11 @@ export default function Login() {
           </div>
         </div>
 
-        <Button onClick={handleGoogleSignIn} disabled={loading} variant="outline" className="w-full rounded-full py-6 font-medium border-border text-ink hover:bg-cream">
-          Google
-        </Button>
+        <GoogleSignInButton
+          role="buyer"
+          variant="outline"
+          label="Google"
+        />
 
         <p className="text-center mt-8 text-sm text-muted-foreground">
           Don't have an account? <Link to="/register" className="text-gold font-semibold hover:underline">Sign up</Link>

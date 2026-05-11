@@ -50,9 +50,9 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-3 mt-4">
              <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10 shrink-0 flex items-center justify-center">
                 {user?.shopLogoUrl ? (
-                  <img src={user.shopLogoUrl} alt={user?.shopName} className="w-full h-full object-cover" />
+                  <img src={user.shopLogoUrl} alt={`${user?.shopName ?? "Your shop"} logo`} className="w-full h-full object-cover" />
                 ) : user?.photoURL ? (
-                  <img src={user.photoURL} alt={user?.displayName} className="w-full h-full object-cover" />
+                  <img src={user.photoURL} alt={`${user?.shopName ?? "Your shop"} logo`} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xl font-heading font-bold text-white">{user?.shopName?.charAt(0) || user?.displayName?.charAt(0) || 'M'}</span>
                 )}
@@ -116,7 +116,7 @@ export default function DashboardLayout() {
                <DropdownMenu>
                  <DropdownMenuTrigger className="flex items-center justify-center w-9 h-9 bg-[#1A237E] text-white rounded-full bg-cover overflow-hidden focus:outline-none ring-2 ring-transparent focus:ring-[#FFC107]">
                      {user?.photoURL ? (
-                       <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                       <img src={user.photoURL} alt={`Profile photo of ${user?.displayName || "user"}`} className="w-full h-full object-cover" />
                      ) : (
                        <span>{user?.email?.[0].toUpperCase() || 'M'}</span>
                      )}

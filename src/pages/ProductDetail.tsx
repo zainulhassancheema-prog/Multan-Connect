@@ -132,7 +132,7 @@ export default function ProductDetail() {
         <div className="w-full md:w-1/2 flex flex-col gap-4">
           <div className="aspect-[4/5] md:aspect-square bg-navy/5 flex items-center justify-center rounded-3xl overflow-hidden border border-border">
             {images.length > 0 ? (
-              <img src={images[activeImage]} alt={product.title} className="w-full h-full object-cover" />
+              <img src={images[activeImage]} alt={`${product.title} — ${product.category} by ${product.shopName || product.sellerName || 'Artisan'}`} className="w-full h-full object-cover" />
             ) : (
               <div className="text-navy font-heading font-bold text-4xl italic opacity-50">MC</div>
             )}
@@ -145,7 +145,7 @@ export default function ProductDetail() {
                   onClick={() => setActiveImage(idx)}
                   className={`w-20 h-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-gold opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
                 >
-                  <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={`${product.title} — view ${idx + 1} of ${images.length}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -193,9 +193,9 @@ export default function ProductDetail() {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center bg-navy" style={!artisan.shopLogoUrl && !artisan.photoURL ? { backgroundColor: '#1A237E' } : {}}>
                   {artisan.shopLogoUrl ? (
-                    <img src={artisan.shopLogoUrl} alt={artisan.shopName} className="w-full h-full object-cover bg-white" />
+                    <img src={artisan.shopLogoUrl} alt={`Shop logo for ${artisan.shopName || artisan.displayName}`} className="w-full h-full object-cover bg-white" />
                   ) : artisan.photoURL ? (
-                     <img src={artisan.photoURL} alt={artisan.shopName || artisan.displayName} className="w-full h-full object-cover bg-white" />
+                     <img src={artisan.photoURL} alt={`Shop logo for ${artisan.shopName || artisan.displayName}`} className="w-full h-full object-cover bg-white" />
                   ) : (
                     <span className="text-xl font-heading font-bold text-white">{artisan.shopName?.charAt(0) || artisan.displayName?.charAt(0) || 'M'}</span>
                   )}

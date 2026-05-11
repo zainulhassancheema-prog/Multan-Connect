@@ -122,7 +122,7 @@ export default function Stories() {
                         <img 
                           src={imageUrl} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                          alt={artisan.shopName}
+                          alt={`${artisan.shopName} — ${artisan.craftType?.replace('_', ' ') || 'artisan'} from ${artisan.shopLocation || 'Multan'}`}
                         />
                     ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${fallbackGradient} flex justify-center items-center opacity-80 group-hover:scale-105 transition-transform duration-700`}>
@@ -150,7 +150,7 @@ export default function Stories() {
                         {artisan.shopLogoUrl || artisan.photoURL ? (
                             <img src={artisan.shopLogoUrl || artisan.photoURL} 
                                 className={`rounded-full border-2 border-gold/70 object-cover ${isHero ? 'w-12 h-12' : 'w-8 h-8'}`} 
-                                alt={artisan.shopName} />
+                                alt={`Shop logo for ${artisan.shopName}`} />
                         ) : (
                             <div className={`rounded-full border-2 border-gold/70 bg-navy flex items-center justify-center ${isHero ? 'w-12 h-12' : 'w-8 h-8'}`}>
                                 <span className="text-white font-bold text-xs">{artisan.shopName?.charAt(0)}</span>

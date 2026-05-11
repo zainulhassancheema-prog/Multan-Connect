@@ -257,7 +257,7 @@ export default function Sustainability() {
             <div className="w-full lg:w-1/2 aspect-square lg:aspect-auto lg:h-[500px] rounded-2xl overflow-hidden bg-white/5 relative flex items-center justify-center">
               {/* Optional Placeholder / Real Image */}
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 to-teal-900/20 mix-blend-overlay"></div>
-              <img src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=1000&auto=format&fit=crop" alt="Blue Pottery Process" className="w-full h-full object-cover" />
+              <img src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=1000&auto=format&fit=crop" alt="Artisan hand-painting intricate arabesque patterns onto Multani blue pottery" className="w-full h-full object-cover" />
             </div>
             <div className="w-full lg:w-1/2 text-white">
               <span className="text-gold uppercase tracking-[0.2em] text-xs font-bold mb-4 block">Blue Pottery · Kashigari</span>
@@ -312,7 +312,7 @@ export default function Sustainability() {
             </div>
             <div className="w-full lg:w-1/2 aspect-square lg:aspect-auto lg:h-[500px] rounded-2xl overflow-hidden bg-white/5 relative flex items-center justify-center">
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/40 to-red-900/20 mix-blend-overlay z-10"></div>
-              <img src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?q=80&w=1000&auto=format&fit=crop" alt="Khussa Making Process" className="w-full h-full object-cover" />
+              <img src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?q=80&w=1000&auto=format&fit=crop" alt="Artisan hand-stitching and completing traditional leather Khussa shoes" className="w-full h-full object-cover" />
             </div>
           </AnimatedSection>
         </div>

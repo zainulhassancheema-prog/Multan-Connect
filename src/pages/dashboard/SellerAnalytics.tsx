@@ -256,7 +256,7 @@ export default function SellerAnalytics() {
                            <div className="flex items-center gap-3">
                              <span className="text-xs font-bold text-muted-foreground w-4">{i + 1}</span>
                              <div className="w-10 h-10 rounded shrink-0 bg-muted overflow-hidden flex items-center justify-center">
-                               {p.images?.[0] ? <img src={p.images[0]} className="w-full h-full object-cover" /> : <span className="text-[8px]">No img</span>}
+                               {p.images?.[0] ? <img src={p.images[0]} className="w-full h-full object-cover" alt={`${p.title} — top selling product`} /> : <span className="text-[8px]">No img</span>}
                              </div>
                              <Link to={`/product/${p.id}`} className="font-medium text-sm text-ink hover:text-gold truncate max-w-[150px] block">{p.title}</Link>
                            </div>

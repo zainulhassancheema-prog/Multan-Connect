@@ -207,7 +207,7 @@ export default function SetupShop() {
             <div className="flex gap-4 items-center">
               <div className="w-20 h-20 rounded-full border border-dashed border-border flex items-center justify-center overflow-hidden bg-muted">
                  {logoPreview ? (
-                   <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                   <img src={logoPreview} alt={`Shop logo preview for ${shopName}`} className="w-full h-full object-cover" />
                  ) : (
                    <Upload className="w-6 h-6 text-muted-foreground" />
                  )}

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ExternalLink, AlertCircle } from 'lucide-react';
+import { BannerUpload } from '@/components/seller/BannerUpload';
+import { Link } from 'react-router-dom';
 
 export default function SellerProfile() {
   const { user, setUser } = useAuthStore();
@@ -19,15 +21,45 @@ export default function SellerProfile() {
   const [shopHandle, setShopHandle] = useState(user?.shopHandle || '');
   const [craftType, setCraftType] = useState(user?.craftType || 'blue_pottery');
   const [shopBio, setShopBio] = useState(user?.shopBio || '');
+  
+  const MAX_BIO_LENGTH = 200;
+  const remainingChars = MAX_BIO_LENGTH - (shopBio?.length ?? 0);
+  const isNearLimit = remainingChars <= 30;
+  const isAtLimit = remainingChars <= 0;
+  
   const [storyText, setStoryText] = useState(user?.storyText || '');
   const [shopLocation, setShopLocation] = useState(user?.shopLocation || '');
   
   // Logos tracking
   const [logoPreview, setLogoPreview] = useState(user?.shopLogoUrl || '');
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  
-  const [bannerPreview, setBannerPreview] = useState(user?.shopBannerUrl || '');
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
+
+  const handleBannerChange = async (downloadUrl: string) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        shopBannerUrl: downloadUrl,
+        updatedAt: serverTimestamp()
+      });
+      setUser({ ...user, shopBannerUrl: downloadUrl });
+    } catch (error) {
+      console.error("Failed to save banner URL:", error);
+      toast.error("Banner uploaded but could not be saved. Please try again.");
+    }
+  };
+
+  const handleBannerRemove = async () => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        shopBannerUrl: "",
+        updatedAt: serverTimestamp()
+      });
+      setUser({ ...user, shopBannerUrl: "" });
+    } catch (error) {
+      toast.error("Failed to remove banner. Please try again.");
+    }
+  };
 
   // Personal Details
   const [displayName, setDisplayName] = useState(user?.displayName || '');
@@ -50,6 +82,12 @@ export default function SellerProfile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    
+    if (shopBio.length > MAX_BIO_LENGTH) {
+      toast.error(`Shop bio cannot exceed ${MAX_BIO_LENGTH} characters`);
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -61,18 +99,11 @@ export default function SellerProfile() {
       }
 
       let newLogoUrl = user.shopLogoUrl;
-      let newBannerUrl = user.shopBannerUrl;
 
       if (logoFile) {
         const imageRef = ref(storage, `users/${user.uid}/shop_logo_${Date.now()}`);
         const snapshot = await uploadBytes(imageRef, logoFile);
         newLogoUrl = await getDownloadURL(snapshot.ref);
-      }
-
-      if (bannerFile) {
-        const imageRef = ref(storage, `users/${user.uid}/shop_banner_${Date.now()}`);
-        const snapshot = await uploadBytes(imageRef, bannerFile);
-        newBannerUrl = await getDownloadURL(snapshot.ref);
       }
 
       const updates = {
@@ -83,7 +114,6 @@ export default function SellerProfile() {
         storyText: storyText.trim(),
         shopLocation,
         ...(newLogoUrl && { shopLogoUrl: newLogoUrl }),
-        ...(newBannerUrl && { shopBannerUrl: newBannerUrl }),
         displayName: displayName.trim(),
       };
 
@@ -106,6 +136,77 @@ export default function SellerProfile() {
         {/* Shop Details Section */}
         <div className="space-y-6 bg-white p-8 rounded-3xl border border-border shadow-sm">
           <h2 className="font-heading font-bold text-xl text-primary border-b border-border pb-2">── Shop Details ──────────────────────────────</h2>
+          
+          <div className="mb-10 pb-10 border-b border-border/50">
+            {user?.uid && (
+              <BannerUpload
+                currentBannerUrl={user?.shopBannerUrl || null}
+                onBannerChange={handleBannerChange}
+                onBannerRemove={handleBannerRemove}
+                userId={user.uid}
+              />
+            )}
+            <p className="text-xs text-muted-foreground italic mt-2">
+              ✓ Banner saves automatically on upload — no need to click Save Changes below
+            </p>
+
+            {/* Live Preview Panel */}
+            <div className="mt-8 p-5 bg-muted/20 rounded-2xl border border-border">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-4">
+                Preview — How buyers will see your shop
+              </p>
+              
+              {/* Miniature version of the artisan page header */}
+              <div className="rounded-xl overflow-hidden border border-border bg-white shadow-sm">
+                
+                {/* Mini banner */}
+                <div className="h-24 w-full relative overflow-hidden bg-muted">
+                  {user?.shopBannerUrl ? (
+                    <img
+                      src={user.shopBannerUrl}
+                      className="w-full h-full object-cover"
+                      alt={`Banner preview for ${shopName ?? "your shop"}`}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary to-primary-light" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/30 to-transparent" />
+                </div>
+                
+                {/* Mini profile info */}
+                <div className="px-5 pb-4 -mt-6 flex items-end gap-3 relative z-10">
+                  <div className="w-14 h-14 rounded-full border-[3px] border-gold bg-primary 
+                                  flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                    {logoPreview ? (
+                      <img src={logoPreview} className="w-full h-full object-cover" alt={`Logo preview for ${shopName ?? "your shop"}`} />
+                    ) : (
+                      <span className="text-white font-serif text-xl font-bold">
+                        {(shopName || "A")?.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="pb-1">
+                    <p className="font-heading text-lg text-primary font-bold leading-tight">
+                      {shopName || "Your Shop Name"}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                      {shopLocation || "Your Location"}
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center mt-4">
+                <Link to={`/artisan/${shopHandle || user?.uid}`}
+                      target="_blank"
+                      className="text-gold hover:text-primary font-medium transition-colors inline-flex items-center gap-1 border-b border-gold/30 hover:border-primary">
+                  View your live public page <ExternalLink size={12} className="relative -top-[1px]" />
+                </Link>
+              </p>
+
+            </div>
+          </div>
           
           <div className="space-y-4">
             <div>
@@ -131,9 +232,86 @@ export default function SellerProfile() {
               </select>
             </div>
 
-            <div>
-              <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Shop Tagline</Label>
-              <Input value={shopBio} onChange={e => setShopBio(e.target.value)} maxLength={100} className="mt-1" placeholder="Handcrafted in Multan since 1987" />
+            <div className="space-y-1.5">
+              <label
+                htmlFor="shopBio"
+                className="text-sm font-medium text-navy flex items-center gap-1.5 font-bold uppercase tracking-widest text-muted-foreground"
+              >
+                Shop Tagline / Bio
+                <span className="text-xs text-muted-foreground font-normal normal-case tracking-normal">(optional)</span>
+              </label>
+
+              <textarea
+                id="shopBio"
+                value={shopBio}
+                onChange={e => setShopBio(e.target.value)}
+                maxLength={MAX_BIO_LENGTH}
+                rows={3}
+                placeholder="Handcrafted in Multan since 1987 — tell buyers your story in one or two sentences."
+                className={`w-full bg-background border rounded-xl px-4 py-3 text-sm text-ink
+                            placeholder:text-muted-foreground/60 resize-none
+                            focus:outline-none focus:ring-2 transition-all duration-200
+                            ${isAtLimit
+                              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                              : isNearLimit
+                                ? "border-amber-400 focus:border-amber-400 focus:ring-amber-400/20"
+                                : "border-input focus:border-gold focus:ring-gold/20"
+                            }`}
+              />
+
+              {/* Progress bar */}
+              <div className="w-full h-0.5 bg-muted rounded-full overflow-hidden mt-1">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ease-out
+                              ${isAtLimit
+                                ? "bg-red-500"
+                                : isNearLimit
+                                  ? "bg-amber-400"
+                                  : "bg-gold"
+                              }`}
+                  style={{
+                    width: `${Math.min(
+                      ((shopBio?.length ?? 0) / MAX_BIO_LENGTH) * 100,
+                      100
+                    )}%`,
+                  }}
+                />
+              </div>
+
+              {/* Counter row */}
+              <div className="flex items-start justify-between gap-2 mt-1.5">
+                <div className="flex-1">
+                  {isAtLimit ? (
+                    <p className="flex items-center gap-1 text-xs text-red-500">
+                      <AlertCircle size={11} className="flex-shrink-0" />
+                      Character limit reached
+                    </p>
+                  ) : isNearLimit ? (
+                    <p className="text-xs text-amber-500">
+                      {remainingChars} character{remainingChars !== 1 ? "s" : ""} remaining
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Shown on your public shop page and artisan story card.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <span
+                    className={`text-xs font-medium tabular-nums transition-colors duration-200
+                                ${isAtLimit
+                                  ? "text-red-500 font-bold"
+                                  : isNearLimit
+                                    ? "text-amber-500"
+                                    : "text-muted-foreground"
+                                }`}
+                  >
+                    {shopBio?.length ?? 0}
+                  </span>
+                  <span className="text-xs text-muted-foreground opacity-60">/{MAX_BIO_LENGTH}</span>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -164,32 +342,17 @@ export default function SellerProfile() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border mt-6">
+            <div className="pt-4 border-t border-border mt-6">
               <div>
                 <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-2 block">Shop Logo</Label>
                 <div className="flex gap-4 items-center">
                   <div className="w-16 h-16 rounded-full border border-border overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                    {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" /> : <span className="text-xs text-muted-foreground">No Logo</span>}
+                    {logoPreview ? <img src={logoPreview} className="w-full h-full object-cover" alt={`Shop logo preview for ${shopName ?? "your shop"}`} /> : <span className="text-xs text-muted-foreground">No Logo</span>}
                   </div>
                   <Input type="file" onChange={e => {
                     if (e.target.files?.[0]) {
                       setLogoFile(e.target.files[0]);
                       setLogoPreview(URL.createObjectURL(e.target.files[0]));
-                    }
-                  }} accept="image/*" />
-                </div>
-              </div>
-              
-              <div>
-                <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground mb-2 block">Shop Banner Photo</Label>
-                <div className="flex gap-4 items-center">
-                  <div className="w-24 h-16 rounded-md border border-border overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                    {bannerPreview ? <img src={bannerPreview} className="w-full h-full object-cover" /> : <span className="text-[10px] text-muted-foreground">No Banner</span>}
-                  </div>
-                  <Input type="file" onChange={e => {
-                    if (e.target.files?.[0]) {
-                      setBannerFile(e.target.files[0]);
-                      setBannerPreview(URL.createObjectURL(e.target.files[0]));
                     }
                   }} accept="image/*" />
                 </div>

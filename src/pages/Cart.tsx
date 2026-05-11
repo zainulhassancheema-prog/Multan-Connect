@@ -149,7 +149,7 @@ export default function Cart() {
                     <div key={item.productId} className={`flex gap-6 items-center ${isMissingOrUnavailable ? 'opacity-50 grayscale' : ''}`}>
                       <div className="w-24 h-32 md:w-32 md:h-40 rounded-xl overflow-hidden shrink-0 border border-border bg-navy/5 flex items-center justify-center">
                         {displayImage ? (
-                          <img src={displayImage} alt={displayTitle} className="w-full h-full object-cover" />
+                          <img src={displayImage} alt={`${displayTitle} by ${shopName}`} className="w-full h-full object-cover" />
                         ) : (
                           <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
                         )}

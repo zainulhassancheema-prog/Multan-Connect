@@ -168,9 +168,9 @@ export default function Home() {
               >
                 <div className="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4 border-4 border-cream group-hover:border-gold/20 transition-colors flex items-center justify-center bg-navy" style={!artisan.shopLogoUrl && !artisan.photoURL ? { backgroundColor: '#1A237E' } : {}}>
                   {artisan.shopLogoUrl ? (
-                    <img src={artisan.shopLogoUrl} alt={artisan.shopName} className="w-full h-full object-cover bg-white" />
+                    <img src={artisan.shopLogoUrl} alt={`Shop logo for ${artisan.shopName}`} className="w-full h-full object-cover bg-white" />
                   ) : artisan.photoURL ? (
-                     <img src={artisan.photoURL} alt={artisan.shopName || artisan.displayName} className="w-full h-full object-cover bg-white" />
+                     <img src={artisan.photoURL} alt={`Shop logo for ${artisan.shopName || artisan.displayName}`} className="w-full h-full object-cover bg-white" />
                   ) : (
                     <span className="text-3xl font-heading font-bold text-white">{artisan.shopName?.charAt(0) || artisan.displayName?.charAt(0) || 'M'}</span>
                   )}
@@ -214,7 +214,7 @@ export default function Home() {
                 <Link to={`/product/${product.id}`} key={product.id} className="group relative block rounded-2xl overflow-hidden bg-cream">
                   <div className="aspect-[4/5] overflow-hidden bg-navy/5 flex items-center justify-center">
                     {product.images && product.images.length > 0 ? (
-                        <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <img src={product.images[0]} alt={`${product.title} — handmade ${product.category} by ${product.shopName || product.sellerName || 'Artisan'} from Multan`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (
                         <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
                     )}
@@ -262,7 +262,7 @@ export default function Home() {
                 <Link to={`/product/${product.id}`} key={product.id} className="group relative block rounded-2xl overflow-hidden bg-white">
                   <div className="aspect-[4/5] overflow-hidden bg-navy/5 flex items-center justify-center">
                     {product.images && product.images.length > 0 ? (
-                        <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <img src={product.images[0]} alt={`${product.title} — handmade ${product.category} by ${product.shopName || product.sellerName || 'Artisan'} from Multan`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (
                         <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
                     )}
@@ -293,7 +293,7 @@ export default function Home() {
           {featuredArtisans && featuredArtisans.length > 0 ? (
              <div className="flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full overflow-hidden mb-6 flex items-center justify-center bg-white border border-gold/30">
-                  <img src="/Logo.jpeg" className="w-full h-full object-cover scale-[1.75]" alt="Featured Artisan" />
+                  <img src="/Logo.jpeg" className="w-full h-full object-cover scale-[1.75]" alt="Multan Connect artisan" />
                 </div>
                 <p className="font-serif italic text-2xl md:text-3xl lg:text-4xl leading-relaxed mb-6">
                   "{featuredArtisans[0].shopBio || 'Each piece carries 400 years of Multani heritage.'}"
@@ -302,7 +302,7 @@ export default function Home() {
           ) : (
              <div className="flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full overflow-hidden mb-6 flex items-center justify-center bg-white border border-gold/30">
-                  <img src="/Logo.jpeg" className="w-full h-full object-cover scale-[1.75]" alt="Featured Artisan" />
+                  <img src="/Logo.jpeg" className="w-full h-full object-cover scale-[1.75]" alt="Multan Connect artisan" />
                 </div>
                 <p className="font-serif italic text-2xl md:text-4xl leading-relaxed mb-6">
                   "Each piece carries 400 years of Multani heritage."

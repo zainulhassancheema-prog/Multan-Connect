@@ -75,7 +75,7 @@ export default function SellerOrders() {
                  {order.items?.map((item: any) => (
                    <div key={item.productId} className="flex items-center gap-3 bg-navy/5 p-2 rounded-lg pr-4">
                       <div className="w-10 h-10 rounded shrink-0 overflow-hidden bg-white">
-                         {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-navy/10 flex items-center justify-center text-xs">MC</div>}
+                         {item.imageUrl ? <img src={item.imageUrl} alt={`${item.title} — ordered item`} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-navy/10 flex items-center justify-center text-xs">MC</div>}
                       </div>
                       <div className="text-sm">
                         <p className="font-medium truncate max-w-[150px]">{item.title}</p>

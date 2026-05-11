@@ -142,7 +142,7 @@ export default function SellerMessages() {
                 >
                   <div className="relative">
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-navy/10 flex items-center justify-center shrink-0">
-                      {otherUserAvatar ? <img src={otherUserAvatar} className="w-full h-full object-cover" /> : <span className="font-heading font-bold text-navy italic">{otherUserName[0]}</span>}
+                      {otherUserAvatar ? <img src={otherUserAvatar} className="w-full h-full object-cover" alt={`Profile photo of ${otherUserName}`} /> : <span className="font-heading font-bold text-navy italic">{otherUserName[0]}</span>}
                     </div>
                     {unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-gold border-2 border-white rounded-full flex items-center justify-center text-[10px] font-bold text-white">
@@ -189,7 +189,7 @@ export default function SellerMessages() {
                     return (
                       <div className="flex items-center gap-3">
                          <div className="w-10 h-10 rounded-full overflow-hidden bg-navy/10 flex items-center justify-center shrink-0">
-                            {selectedChat.participantAvatars?.[otherUserId] ? <img src={selectedChat.participantAvatars[otherUserId]} className="w-full h-full object-cover" /> : <span className="font-heading font-bold text-navy italic">{selectedChat.participantNames?.[otherUserId]?.[0] || 'B'}</span>}
+                            {selectedChat.participantAvatars?.[otherUserId] ? <img src={selectedChat.participantAvatars[otherUserId]} className="w-full h-full object-cover" alt={`Profile photo of ${selectedChat.participantNames?.[otherUserId] || 'Buyer'}`} /> : <span className="font-heading font-bold text-navy italic">{selectedChat.participantNames?.[otherUserId]?.[0] || 'B'}</span>}
                          </div>
                          <h3 className="font-bold text-base">{selectedChat.participantNames?.[otherUserId] || 'Buyer'}</h3>
                       </div>
@@ -199,7 +199,7 @@ export default function SellerMessages() {
                
                {selectedChat.productName && (
                  <div className="hidden sm:flex items-center gap-2 bg-muted/50 p-2 rounded-lg border border-border">
-                   {selectedChat.productImage && <img src={selectedChat.productImage} className="w-8 h-8 rounded shrink-0 object-cover" />}
+                   {selectedChat.productImage && <img src={selectedChat.productImage} className="w-8 h-8 rounded shrink-0 object-cover" alt={`${selectedChat.productName} — product being discussed`} />}
                    <p className="text-xs font-medium truncate max-w-[150px]">{selectedChat.productName}</p>
                  </div>
                )}

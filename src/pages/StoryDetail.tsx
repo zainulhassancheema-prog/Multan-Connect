@@ -105,15 +105,18 @@ export default function StoryDetail() {
       {/* Full-Width Cover */}
       <div className="relative w-full h-[60vh] bg-navy overflow-hidden">
         {seller.shopBannerUrl ? (
-          <img src={seller.shopBannerUrl} alt={seller.shopName} className="w-full h-full object-cover" />
+          <img
+            src={seller.shopBannerUrl}
+            alt={`${seller.shopName} workshop — ${seller.craftType?.replace('_', ' ') || 'artisan'} from Multan`}
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-navy via-navy to-teal-900 opacity-90 relative overflow-hidden">
-             <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] mix-blend-overlay"></div>
-             <div className="absolute inset-0 flex items-center justify-center">
-                 <span className="font-heading font-extrabold text-[15vw] text-white/5 uppercase tracking-tighter truncate w-full text-center">
-                    {seller.shopName}
-                 </span>
-             </div>
+          <div className="w-full h-full bg-gradient-to-br from-navy via-primary to-teal relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.2] bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] mix-blend-overlay pointer-events-none" />
+            <p className="font-heading text-[12vw] md:text-8xl text-white/10 font-bold 
+                          absolute inset-0 flex items-center justify-center truncate px-4 pb-12">
+              {seller.shopName}
+            </p>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/20 to-transparent bottom-[-2px]"></div>
@@ -125,7 +128,7 @@ export default function StoryDetail() {
           
           <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-xl flex-shrink-0 bg-cream flex items-center justify-center overflow-hidden -mt-20 md:mt-0">
              {seller.shopLogoUrl || seller.photoURL ? (
-                <img src={seller.shopLogoUrl || seller.photoURL} className="w-full h-full object-cover" alt={seller.shopName} />
+                <img src={seller.shopLogoUrl || seller.photoURL} className="w-full h-full object-cover" alt={`${seller.shopName} shop logo`} />
              ) : (
                 <span className="text-5xl font-serif text-gold">{seller.shopName?.charAt(0)}</span>
              )}
@@ -256,7 +259,7 @@ export default function StoryDetail() {
                     <div key={review.id} className="bg-white rounded-2xl p-8 shadow-sm border border-border/50 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-navy/5 flex items-center justify-center shrink-0">
-                           {review.image ? <img src={review.image} className="w-full h-full object-cover" alt="Review" /> : <span className="text-navy font-bold">{review.reviewerName?.charAt(0)}</span>}
+                           {review.image ? <img src={review.image} className="w-full h-full object-cover" alt={`Profile photo of ${review.reviewerName}`} /> : <span className="text-navy font-bold">{review.reviewerName?.charAt(0)}</span>}
                         </div>
                         <div>
                         <p className="font-bold text-ink text-sm">{review.reviewerName}</p>

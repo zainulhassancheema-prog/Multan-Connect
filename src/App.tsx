@@ -1,10 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import RootLayout from '@/layouts/RootLayout';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useEffect } from 'react';
+import { handleGoogleRedirectResult } from '@/lib/firebase/auth';
 
 // Pages - Auth
 import Login from '@/pages/auth/Login';
@@ -48,6 +49,20 @@ import Shipping from '@/pages/Shipping';
 
 const queryClient = new QueryClient();
 
+function AuthRedirectHandler({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    handleGoogleRedirectResult().then(user => {
+      if (user) {
+        navigate('/', { replace: true });
+      }
+    });
+  }, [navigate]);
+
+  return <>{children}</>;
+}
+
 // Protected Route Wrapper for Seller Workspace
 function RequireSeller({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
@@ -73,12 +88,13 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          <Route element={<RootLayout />}>
-            <Route path="/" element={<Home />} />
+        <AuthRedirectHandler>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            <Route element={<RootLayout />}>
+              <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/artisans" element={<ArtisansList />} />
             <Route path="/stories" element={<Stories />} />
@@ -118,6 +134,7 @@ export default function App() {
             <Route path="*" element={<div className="p-8">Page under construction...</div>} />
           </Route>
         </Routes>
+        </AuthRedirectHandler>
       </Router>
       <Toaster />
     </QueryClientProvider>

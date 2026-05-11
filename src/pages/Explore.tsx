@@ -183,7 +183,7 @@ export default function Explore() {
                     <Link to={`/product/${product.id}`} key={product.id} className="group flex flex-col">
                       <div className="aspect-[4/5] rounded-2xl overflow-hidden mb-4 bg-navy/5 flex items-center justify-center border border-border">
                         {product.images && product.images.length > 0 ? (
-                          <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                          <img src={product.images[0]} alt={`${product.title} — handmade ${product.category} by ${product.shopName || product.sellerName || 'Artisan'} from Multan`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                         ) : (
                           <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
                         )}

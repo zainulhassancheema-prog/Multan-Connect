@@ -134,7 +134,7 @@ export default function SellerReviews() {
                   <div className="flex-1 space-y-4">
                      <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-navy/10 overflow-hidden flex items-center justify-center shrink-0">
-                           {review.reviewerImage ? <img src={review.reviewerImage} className="w-full h-full object-cover" /> : <span className="font-heading font-bold italic">{review.reviewerName[0]}</span>}
+                           {review.reviewerImage ? <img src={review.reviewerImage} className="w-full h-full object-cover" alt={`Profile photo of ${review.reviewerName}`} /> : <span className="font-heading font-bold italic">{review.reviewerName[0]}</span>}
                         </div>
                         <div>
                            <p className="font-bold text-sm">{review.reviewerName}</p>
@@ -170,7 +170,7 @@ export default function SellerReviews() {
                   
                   <div className="w-full md:w-48 shrink-0 bg-muted/30 rounded-xl p-3 border border-border flex items-center gap-3">
                      <div className="w-12 h-12 bg-white rounded-md overflow-hidden shrink-0 border border-border flex items-center justify-center">
-                        {review.productImage ? <img src={review.productImage} className="w-full h-full object-cover" /> : <span className="text-[10px] italic text-muted-foreground">No img</span>}
+                        {review.productImage ? <img src={review.productImage} className="w-full h-full object-cover" alt={`${review.productName} — reviewed product`} /> : <span className="text-[10px] italic text-muted-foreground">No img</span>}
                      </div>
                      <div className="flex-1 min-w-0">
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Purchased</p>

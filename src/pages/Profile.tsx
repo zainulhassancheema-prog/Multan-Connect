@@ -32,7 +32,7 @@ export default function Profile() {
       <AnimatedSection className="container mx-auto px-4 max-w-4xl text-center">
         <div className="w-32 h-32 mx-auto bg-white rounded-full flex items-center justify-center mb-6 shadow-md border-4 border-white overflow-hidden">
              {user?.photoURL ? (
-                 <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                 <img src={user.photoURL} alt={`Profile photo of ${user.displayName || 'User'}`} className="w-full h-full object-cover" />
              ) : (
                  <div className="text-4xl text-gold font-bold">{user?.displayName?.charAt(0) || user?.email?.charAt(0) || '?'}</div>
              )}

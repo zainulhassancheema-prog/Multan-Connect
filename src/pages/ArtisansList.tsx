@@ -39,7 +39,7 @@ export default function ArtisansList() {
           {ARTISANS.map((artisan) => (
             <Link key={artisan.id} to={`/artisan/${artisan.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-black/5">
               <div className="aspect-square overflow-hidden relative">
-                <img src={artisan.image} alt={artisan.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <img src={artisan.image} alt={`${artisan.name} — Multan Connect artisan`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
                   <span className="text-white font-medium hover-underline">View Profile</span>
                 </div>

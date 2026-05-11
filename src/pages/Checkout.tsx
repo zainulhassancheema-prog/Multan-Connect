@@ -220,7 +220,7 @@ export default function Checkout() {
                        <div key={item.productId} className="flex gap-4 items-center">
                          <div className="w-16 h-16 rounded-md overflow-hidden bg-navy/5 flex items-center justify-center shrink-0">
                             {item.imageUrl ? (
-                              <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                              <img src={item.imageUrl} alt={`${item.title} — ${item.quantity} × PKR ${item.price.toLocaleString()}`} className="w-full h-full object-cover" />
                             ) : (
                               <span className="font-heading font-bold italic text-navy/40">MC</span>
                             )}

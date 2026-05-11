@@ -68,7 +68,7 @@ export default function OrderConfirmation() {
                 <div className="flex items-center gap-4">
                    <div className="w-10 h-10 rounded-md overflow-hidden bg-navy/5 flex items-center justify-center shrink-0">
                      {item.imageUrl ? (
-                       <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                       <img src={item.imageUrl} alt={`${item.title} — quantity ${item.quantity}`} className="w-full h-full object-cover" />
                      ) : (
                        <span className="text-[10px] font-heading font-bold italic text-navy/40">MC</span>
                      )}

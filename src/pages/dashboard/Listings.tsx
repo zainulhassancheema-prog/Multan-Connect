@@ -42,7 +42,7 @@ export default function Listings() {
              {listings.map(product => (
                <div key={product.id} className="bg-white rounded-2xl p-6 border border-border shadow-sm flex items-center gap-6">
                   <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden shrink-0">
-                     <img src={product.images?.[0]} alt={product.title} className="w-full h-full object-cover" />
+                     <img src={product.images?.[0]} alt={`${product.title} — your listing`} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1">
                      <h3 className="font-sans font-medium text-lg">{product.title}</h3>

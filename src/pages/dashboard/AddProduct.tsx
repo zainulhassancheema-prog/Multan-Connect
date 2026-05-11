@@ -1,68 +1,44 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
-import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db } from '@/lib/firebase/config';
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/shared/BackButton';
+import { ProductImageUpload } from '@/components/seller/ProductImageUpload';
+import { toast } from 'sonner';
 
 export default function AddProduct() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  
+  const [productId] = useState(() => `prod-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setImages(prev => [...prev, ...filesArray]);
-      
-      const newPreviews = filesArray.map(file => URL.createObjectURL(file));
-      setImagePreviews(prev => [...prev, ...newPreviews]);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => {
-      const newPreviews = [...prev];
-      URL.revokeObjectURL(newPreviews[index]);
-      newPreviews.splice(index, 1);
-      return newPreviews;
-    });
-  };
-
   const addListingMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Must be logged in');
-      
-      const imageUrls: string[] = [];
-      
-      // Upload images
-      for (const image of images) {
-        // Optional: you can compress or resize the image before uploading
-        const imageRef = ref(storage, `products/${user.uid}/${Date.now()}_${image.name}`);
-        const snapshot = await uploadBytes(imageRef, image);
-        const url = await getDownloadURL(snapshot.ref);
-        imageUrls.push(url);
+      if (imageUrls.length === 0) {
+        throw new Error('Please upload at least one product image');
       }
       
       const nPrice = parseFloat(price);
       const nStock = parseInt(stock, 10);
 
-      const docRef = await addDoc(collection(db, 'products'), {
+      await setDoc(doc(db, 'products', productId), {
+        id: productId,
         sellerId: user.uid,
         sellerName: user.shopName || user.displayName, // fallback
         shopName: user.shopName || user.displayName, // ensure product has shopName
@@ -74,22 +50,31 @@ export default function AddProduct() {
         category,
         location,
         images: imageUrls,
+        primaryImage: imageUrls[0] ?? null,
         isAvailable: true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
       
-      return docRef.id;
+      return productId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-listings', user?.uid] });
+      toast.success('Product listed successfully');
       navigate('/seller/listings');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to list product');
     }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !price || !category) return;
+    if (imageUrls.length === 0) {
+      toast.error("Please upload at least one product image");
+      return;
+    }
     addListingMutation.mutate();
   };
 
@@ -140,41 +125,24 @@ export default function AddProduct() {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label className="font-sans tracking-widest uppercase text-xs text-ink">Product Images</Label>
-            <div className="border border-dashed border-gold/50 rounded-2xl p-8 bg-white text-center cursor-pointer hover:bg-gold/5 transition-colors relative">
-               <input 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  onChange={handleImageChange} 
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-               />
-               <Upload className="w-8 h-8 text-gold mx-auto mb-2" />
-               <p className="font-serif italic text-muted-foreground text-sm">Click or drag images to upload</p>
-            </div>
-            
-            {imagePreviews.length > 0 && (
-              <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
-                {imagePreviews.map((preview, idx) => (
-                  <div key={idx} className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden border border-border">
-                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                    <button 
-                      type="button" 
-                      onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-destructive hover:bg-white transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+          <div className="pt-4 border-t border-border mt-4">
+            <ProductImageUpload
+              productId={productId}
+              initialImages={[]}
+              onChange={(urls) => setImageUrls(urls)}
+              maxImages={6}
+            />
+            {imageUrls.length === 0 && (
+              <p className="text-xs text-red-600 flex items-center gap-1 mt-2">
+                <AlertCircle size={12} />
+                At least one image is required
+              </p>
             )}
           </div>
           
           <div className="flex justify-end gap-4 pt-4 border-t border-border">
              <Button type="button" variant="ghost" onClick={() => navigate('/seller/listings')} className="rounded-full rounded-xl">Cancel</Button>
-             <Button type="submit" disabled={addListingMutation.isPending} className="bg-gold hover:bg-gold-light text-white rounded-full px-8">
+             <Button type="submit" disabled={addListingMutation.isPending || imageUrls.length === 0} className="bg-gold hover:bg-gold-light text-white rounded-full px-8 disabled:opacity-50 disabled:cursor-not-allowed">
                {addListingMutation.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Publishing...</> : 'Publish Listing'}
              </Button>
           </div>

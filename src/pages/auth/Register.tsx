@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/lib/store/authStore';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/shared/BackButton';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -100,57 +101,6 @@ export default function Register() {
         toast.error('Registration Failed', { description: error.message });
       }
       console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    if (!role) {
-       toast.error("Please select an account type first");
-       return;
-    }
-
-    setLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-
-      const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        const userData: any = {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName || 'User',
-          photoURL: user.photoURL || '',
-          role: role,
-          createdAt: Date.now()
-        };
-        if (role === 'seller' || role === 'both') {
-            userData.craftType = 'New Artisan';
-            userData.workshopLocation = 'Update in settings';
-            userData.isVerifiedArtisan = false;
-        }
-        await setDoc(docRef, userData);
-        useAuthStore.getState().setUser({ ...user, role, isVerifiedArtisan: userData.isVerifiedArtisan } as any);
-      } else {
-        const data = docSnap.data();
-        useAuthStore.getState().setUser({ ...user, role: data?.role, isVerifiedArtisan: data?.isVerifiedArtisan } as any);
-      }
-      
-      useAuthStore.getState().setMode(role === 'both' ? 'seller' : role);
-
-      if (role === 'buyer') {
-          navigate('/', { replace: true });
-      } else {
-          navigate('/seller', { replace: true });
-      }
-      toast.success('Account created successfully');
-    } catch (error: any) {
-      toast.error('Google Sign-In Failed', { description: error.message });
     } finally {
       setLoading(false);
     }
@@ -262,9 +212,13 @@ export default function Register() {
               </div>
             </div>
 
-            <Button onClick={handleGoogleSignIn} disabled={loading} variant="outline" className="w-full rounded-full py-6 font-medium border-border text-ink hover:bg-cream">
-              Google
-            </Button>
+            {role && (
+                <GoogleSignInButton
+                  role={role}
+                  variant="outline"
+                  label="Google"
+                />
+            )}
             </>
         )}
 
