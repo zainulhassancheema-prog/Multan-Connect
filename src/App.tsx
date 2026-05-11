@@ -37,8 +37,14 @@ import ArtisansList from '@/pages/ArtisansList';
 
 import Stories from '@/pages/Stories';
 import StoryDetail from '@/pages/StoryDetail';
+import Sustainability from '@/pages/Sustainability';
 import OurStory from '@/pages/OurStory';
 import StaticPage from '@/pages/StaticPage';
+import Contact from '@/pages/Contact';
+import Terms from '@/pages/Terms';
+import Privacy from '@/pages/Privacy';
+
+import Shipping from '@/pages/Shipping';
 
 const queryClient = new QueryClient();
 
@@ -78,11 +84,11 @@ export default function App() {
             <Route path="/stories" element={<Stories />} />
             <Route path="/stories/:handle" element={<StoryDetail />} />
             <Route path="/our-story" element={<OurStory />} />
-            <Route path="/sustainability" element={<StaticPage title="Sustainability" />} />
-            <Route path="/contact" element={<StaticPage title="Contact Us" />} />
-            <Route path="/terms" element={<StaticPage title="Terms of Service" />} />
-            <Route path="/privacy" element={<StaticPage title="Privacy Policy" />} />
-            <Route path="/shipping" element={<StaticPage title="Shipping & Returns" />} />
+            <Route path="/sustainability" element={<Sustainability />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/shipping" element={<Shipping />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/artisan/:handle" element={<ArtisanProfile />} />
             <Route path="/cart" element={<Cart />} />

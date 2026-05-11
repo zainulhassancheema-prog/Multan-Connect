@@ -53,6 +53,7 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-[32px]">
           <Link to="/explore" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">The Marketplace</Link>
           <Link to="/stories" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Stories</Link>
+          <Link to="/sustainability" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Sustainability</Link>
           <Link to="/artisans" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Artisans</Link>
           <Link to="/explore?category=Blue%20Pottery" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Blue Pottery</Link>
           <Link to="/explore?category=Khussa" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Khussa</Link>
