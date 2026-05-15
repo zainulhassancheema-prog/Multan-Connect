@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { Loader2, ExternalLink, AlertCircle } from 'lucide-react';
+import { Loader2, ExternalLink, AlertCircle, Sparkles } from 'lucide-react';
 import { BannerUpload } from '@/components/seller/BannerUpload';
 import { Link } from 'react-router-dom';
 
@@ -30,6 +30,39 @@ export default function SellerProfile() {
   const [storyText, setStoryText] = useState(user?.storyText || '');
   const [shopLocation, setShopLocation] = useState(user?.shopLocation || '');
   
+  const [storyLoading, setStoryLoading] = useState(false);
+  const generateStory = async () => {
+    if (!shopName || !craftType) {
+      toast.error("Please fill Shop Name and Craft Type first");
+      return;
+    }
+    setStoryLoading(true);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feature: "craft-story",
+          payload: { shopName, craftType, location: shopLocation, bio: storyText }
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.result) setStoryText(data.result);
+    } catch (err: any) {
+      const message = err.message ?? "";
+      if (message.includes("429") || message.includes("quota")) {
+        toast.error("AI is busy right now. Please try again in a moment.");
+      } else if (message.includes("API key") || message.includes("API_KEY_INVALID")) {
+        toast.error("AI service configuration error. Please contact support.");
+      } else {
+        toast.error("Failed to generate story");
+      }
+    } finally {
+      setStoryLoading(false);
+    }
+  };
+
   // Logos tracking
   const [logoPreview, setLogoPreview] = useState(user?.shopLogoUrl || '');
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -315,7 +348,23 @@ export default function SellerProfile() {
             </div>
 
             <div className="space-y-2">
-              <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Your Story (optional)</Label>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Your Story (optional)</Label>
+                <button
+                  type="button"
+                  onClick={generateStory}
+                  disabled={storyLoading}
+                  className="flex items-center gap-1.5 text-xs text-navy
+                             hover:text-gold transition-colors border border-navy/20
+                             hover:border-gold/40 px-3 py-1.5 rounded-xl"
+                >
+                  {storyLoading
+                    ? <Loader2 size={11} className="animate-spin" />
+                    : <Sparkles size={11} className="text-gold" />
+                  }
+                  Generate Story with AI
+                </button>
+              </div>
               <p className="text-xs text-muted-foreground font-serif italic text-gold">
                 Tell buyers about your craft, your family history, your process. 
                 This appears on your public story page. Write as much as you like.

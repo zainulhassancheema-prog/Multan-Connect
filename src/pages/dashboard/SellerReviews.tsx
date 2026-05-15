@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { collection, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { Star, MessageCircle, Reply, CheckCircle2 } from 'lucide-react';
+import { Star, MessageCircle, Reply, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface Review {
   id: string;
@@ -51,19 +52,62 @@ export default function SellerReviews() {
     fetchReviews();
   }, [user]);
 
-  const handleReply = async (reviewId: string) => {
-    if (!replyText.trim() || !user) return;
+  const [replyTextMap, setReplyTextMap] = useState<Record<string, string>>({});
+  const [replyLoadingMap, setReplyLoadingMap] = useState<Record<string, boolean>>({});
+  const [aiReply, setAiReply] = useState<Record<string, boolean>>({});
+
+  const generateReply = async (review: Review) => {
+    if (!user) return;
+    setReplyLoadingMap(prev => ({ ...prev, [review.id]: true }));
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feature: "review-reply",
+          payload: {
+            reviewText: review.text,
+            rating: review.rating,
+            productTitle: review.productName,
+            shopName: user.shopName || user.displayName,
+            reviewerName: review.reviewerName
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.result) {
+        setReplyTextMap(prev => ({ ...prev, [review.id]: data.result }));
+        setAiReply(prev => ({ ...prev, [review.id]: true }));
+      }
+    } catch (err: any) {
+      const message = err.message ?? "";
+      if (message.includes("429") || message.includes("quota")) {
+        toast.error("AI is busy right now. Please try again in a moment.");
+      } else if (message.includes("API key") || message.includes("API_KEY_INVALID")) {
+        toast.error("AI service configuration error. Please contact support.");
+      } else {
+        toast.error("Failed to generate reply");
+      }
+    } finally {
+      setReplyLoadingMap(prev => ({ ...prev, [review.id]: false }));
+    }
+  };
+
+  const submitReply = async (reviewId: string) => {
+    const text = replyTextMap[reviewId]?.trim();
+    if (!text || !user) return;
     try {
       await updateDoc(doc(db, 'reviews', reviewId), {
         reply: {
-          text: replyText.trim(),
+          text,
           repliedAt: Date.now(),
           sellerId: user.uid
         }
       });
-      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply: { text: replyText.trim(), repliedAt: Date.now() } } : r));
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply: { text, repliedAt: Date.now() } } : r));
       setReplyingTo(null);
-      setReplyText('');
+      setReplyTextMap(prev => ({ ...prev, [reviewId]: '' }));
+      setAiReply(prev => ({ ...prev, [reviewId]: false }));
       toast.success('Reply posted successfully');
     } catch (err) {
       toast.error('Failed to post reply');
@@ -156,11 +200,49 @@ export default function SellerReviews() {
                          <p className="text-sm">{review.reply.text}</p>
                        </div>
                      ) : replyingTo === review.id ? (
-                       <div className="mt-4 flex gap-2">
-                         <Input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Type your public reply..." className="flex-1" />
-                         <Button onClick={() => handleReply(review.id)} className="bg-gold hover:bg-gold-light text-white">Post Reply</Button>
-                         <Button variant="ghost" onClick={() => setReplyingTo(null)}>Cancel</Button>
-                       </div>
+                       <motion.div
+                         initial={{ opacity: 0, height: 0 }}
+                         animate={{ opacity: 1, height: "auto" }}
+                         className="mt-4 space-y-3 p-4 bg-muted/30 rounded-xl border border-border"
+                       >
+                         {/* AI Draft button */}
+                         <div className="flex items-center gap-2 mb-1">
+                           <button
+                             type="button"
+                             onClick={() => generateReply(review)}
+                             disabled={replyLoadingMap[review.id]}
+                             className="flex items-center gap-1.5 text-xs font-medium
+                                        text-navy border border-navy/20 hover:border-gold/40
+                                        hover:text-gold px-3 py-1.5 rounded-xl transition-colors bg-white"
+                           >
+                             {replyLoadingMap[review.id]
+                               ? <Loader2 size={11} className="animate-spin" />
+                               : <Sparkles size={11} className="text-gold" />
+                             }
+                             Draft with AI
+                           </button>
+                           {aiReply[review.id] && (
+                             <span className="text-xs text-muted-foreground italic">
+                               Edit below before posting
+                             </span>
+                           )}
+                         </div>
+
+                         <textarea
+                           value={replyTextMap[review.id] ?? ""}
+                           onChange={e => setReplyTextMap(prev => ({
+                             ...prev,
+                             [review.id]: e.target.value
+                           }))}
+                           rows={3}
+                           placeholder="Type your public reply..."
+                           className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:border-gold focus:ring-1 focus:ring-gold/20 outline-none resize-none bg-white"
+                         />
+                         <div className="flex gap-2 pt-1">
+                           <Button onClick={() => submitReply(review.id)} className="bg-gold hover:bg-gold/90 text-white rounded-xl">Post Reply</Button>
+                           <Button variant="ghost" onClick={() => setReplyingTo(null)} className="rounded-xl">Cancel</Button>
+                         </div>
+                       </motion.div>
                      ) : (
                        <Button variant="outline" size="sm" onClick={() => setReplyingTo(review.id)} className="mt-2 text-xs font-bold uppercase tracking-widest text-navy border-navy hover:bg-navy hover:text-white transition-colors">
                          Reply to Review

@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/shared/BackButton';
 import { ProductImageUpload } from '@/components/seller/ProductImageUpload';
+import { AIDescriptionGenerator } from '@/components/seller/AIDescriptionGenerator';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function AddProduct() {
   const { user } = useAuthStore();
@@ -25,7 +27,13 @@ export default function AddProduct() {
   const [stock, setStock] = useState('');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
+  const [materials, setMaterials] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [priceSuggestion, setPriceSuggestion] = useState<any>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [tagsLoading, setTagsLoading] = useState(false);
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   
   const addListingMutation = useMutation({
     mutationFn: async () => {
@@ -44,11 +52,14 @@ export default function AddProduct() {
         shopName: user.shopName || user.displayName, // ensure product has shopName
         sellerPhotoUrl: user.shopLogoUrl || user.photoURL || '',
         title,
+        titleLower: title.toLowerCase().trim(),
         description,
         price: nPrice,
         stock: nStock,
         category,
         location,
+        materials,
+        tags,
         images: imageUrls,
         primaryImage: imageUrls[0] ?? null,
         isAvailable: true,
@@ -67,6 +78,75 @@ export default function AddProduct() {
       toast.error(error.message || 'Failed to list product');
     }
   });
+
+  const getPriceSuggestion = async () => {
+    if (!title || !category) {
+      toast.error("Please fill title and category first");
+      return;
+    }
+    setPriceLoading(true);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feature: "price-suggestion",
+          payload: { title, category, materials, description }
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.result) setPriceSuggestion(data.result);
+    } catch (err: any) {
+      const message = err.message ?? "";
+      if (message.includes("429") || message.includes("quota")) {
+        toast.error("AI is busy right now. Please try again in a moment.");
+      } else if (message.includes("API key") || message.includes("API_KEY_INVALID")) {
+        toast.error("AI service configuration error. Please contact support.");
+      } else {
+        toast.error("Failed to get price suggestion");
+      }
+    } finally {
+      setPriceLoading(false);
+    }
+  };
+
+  const generateTags = async () => {
+    if (!title || !category) return;
+    setTagsLoading(true);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feature: "tag-generator",
+          payload: { title, category, description }
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.result?.tags) setSuggestedTags(data.result.tags);
+    } catch (err: any) {
+      const message = err.message ?? "";
+      if (message.includes("429") || message.includes("quota")) {
+        toast.error("AI is busy right now. Please try again in a moment.");
+      } else if (message.includes("API key") || message.includes("API_KEY_INVALID")) {
+        toast.error("AI service configuration error. Please contact support.");
+      } else {
+        toast.error("Failed to generate tags");
+      }
+    } finally {
+      setTagsLoading(false);
+    }
+  };
+
+  const addTag = (tag: string) => {
+    if (!tags.includes(tag)) setTags([...tags, tag]);
+    setSuggestedTags(prev => prev.filter(t => t !== tag));
+  };
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,11 +182,49 @@ export default function AddProduct() {
                 className="w-full rounded-xl border border-border bg-white p-3 min-h-[100px] outline-none focus:border-gold transition-colors font-serif" 
                 placeholder="Tell the story of this piece..."
               />
+              <AIDescriptionGenerator
+                title={title}
+                category={category}
+                materials={materials}
+                price={parseFloat(price) || 0}
+                location={location}
+                onApply={(desc) => setDescription(desc)}
+              />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="price" className="font-sans tracking-widest uppercase text-xs text-ink">Price (Rs)</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="price" className="font-sans tracking-widest uppercase text-xs text-ink">Price (Rs)</Label>
+                <button type="button" onClick={getPriceSuggestion} disabled={priceLoading} className="text-xs text-gold flex items-center gap-1 hover:underline">
+                  {priceLoading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                  Suggest Price
+                </button>
+              </div>
               <Input id="price" type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required className="rounded-xl border-border bg-white" placeholder="0.00" />
+              {priceSuggestion && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-2 bg-teal/5 border border-teal/20 rounded-xl p-3 mt-2"
+                >
+                  <Sparkles size={13} className="text-teal flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs text-navy font-medium">
+                      AI Suggested: PKR {priceSuggestion.minPrice?.toLocaleString()}
+                      {" – "}
+                      {priceSuggestion.maxPrice?.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{priceSuggestion.reasoning}</p>
+                    <button
+                      type="button"
+                      onClick={() => setPrice(priceSuggestion.recommendedPrice?.toString() || '')}
+                      className="text-xs text-teal hover:underline mt-1 font-medium"
+                    >
+                      Use PKR {priceSuggestion.recommendedPrice?.toLocaleString()} →
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -122,6 +240,72 @@ export default function AddProduct() {
             <div className="space-y-2">
               <Label htmlFor="location" className="font-sans tracking-widest uppercase text-xs text-ink">Origin Location</Label>
               <Input id="location" value={location} onChange={e => setLocation(e.target.value)} className="rounded-xl border-border bg-white" placeholder="e.g. Multan, Pakistan" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="materials" className="font-sans tracking-widest uppercase text-xs text-ink">Materials</Label>
+              <Input id="materials" value={materials} onChange={e => setMaterials(e.target.value)} className="rounded-xl border-border bg-white" placeholder="e.g. Clay, Leather, Cotton" />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <Label className="font-sans tracking-widest uppercase text-xs text-ink">Search Tags</Label>
+                <button
+                  type="button"
+                  onClick={generateTags}
+                  disabled={tagsLoading}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-gold transition-colors"
+                >
+                  {tagsLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} className="text-gold" />}
+                  Suggest tags with AI
+                </button>
+              </div>
+
+              {/* Tag Input */}
+              <Input
+                placeholder="Type a tag and press Enter"
+                className="rounded-xl border-border bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const val = e.currentTarget.value.trim().toLowerCase();
+                    if (val && !tags.includes(val)) {
+                      addTag(val);
+                      e.currentTarget.value = "";
+                    }
+                  }
+                }}
+              />
+
+              {/* Active Tags */}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {tags.map(tag => (
+                    <span key={tag} className="inline-flex items-center gap-1 bg-white border border-border text-ink px-2.5 py-1 rounded-full text-xs">
+                      {tag}
+                      <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-500">
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Suggested Tags */}
+              {suggestedTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {suggestedTags.map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => addTag(tag)}
+                      className="text-xs bg-gold/10 text-gold border border-gold/20 hover:bg-gold hover:text-white px-2.5 py-1 rounded-full transition-all duration-200"
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           

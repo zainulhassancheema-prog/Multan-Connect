@@ -186,6 +186,16 @@ export default function Sustainability() {
         {/* Arabesque SVG pattern background */}
         <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] mix-blend-overlay"></div>
 
+        <motion.img
+          src="/images/hero-vase.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute left-8 bottom-8 w-24 h-auto opacity-5
+                     pointer-events-none hidden lg:block"
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+
         <AnimatedSection className="relative z-10 flex flex-col items-center max-w-4xl">
           {/* Gold label */}
           <span className="text-gold uppercase tracking-[0.2em] text-xs font-bold mb-6 block">

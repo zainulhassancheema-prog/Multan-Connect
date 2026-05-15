@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 export const MOCK_STORIES = [
   {
@@ -71,6 +72,16 @@ export default function Stories() {
         <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')] mix-blend-overlay"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-navy/50 to-navy z-10"></div>
         
+        <motion.img
+          src="/images/hero-vase.png"
+          alt=""
+          aria-hidden="true"
+          animate={{ rotate: [0, 5, 0, -5, 0], y: [0, -10, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute right-8 top-1/4 w-32 h-auto opacity-5
+                     pointer-events-none hidden lg:block z-10"
+        />
+
         <div className="relative z-20 px-4 mt-16 max-w-4xl">
           <h1 className="font-serif italic text-white text-5xl md:text-7xl lg:text-8xl mb-6 leading-tight drop-shadow-lg">
             Stories from the Craft

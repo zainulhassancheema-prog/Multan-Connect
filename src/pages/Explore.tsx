@@ -8,18 +8,35 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, RefreshCw, ArchiveX, Star } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import ProductCardSkeleton from '@/components/shared/ProductCardSkeleton';
+import ProductCard from '@/components/shared/ProductCard';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 export default function Explore() {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryFilter = searchParams.get('category');
+  const queryFilter = searchParams.get('q');
   
   const [products, setProducts] = useState<Product[]>([]);
   const [lastVisible, setLastVisible] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(queryFilter || '');
+  
+  // When URL param changes, update local search term
+  useEffect(() => {
+    setSearchTerm(searchParams.get('q') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchTerm) {
+      document.title = `"${searchTerm}" — Explore | Multan Connect`;
+    } else {
+      document.title = "Explore Handmade Crafts | Multan Connect";
+    }
+  }, [searchTerm]);
   
   // Realtime listener for new products toast
   useEffect(() => {
@@ -174,30 +191,13 @@ export default function Explore() {
           <div className="flex-1">
             {loading ? (
                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                 {[...Array(6)].map((_,i) => <Skeleton key={i} className="h-80 rounded-2xl bg-white" />)}
+                 {[...Array(6)].map((_,i) => <ProductCardSkeleton key={i} />)}
                </div>
             ) : products.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 gap-y-10">
                   {products.map((product) => (
-                    <Link to={`/product/${product.id}`} key={product.id} className="group flex flex-col">
-                      <div className="aspect-[4/5] rounded-2xl overflow-hidden mb-4 bg-navy/5 flex items-center justify-center border border-border">
-                        {product.images && product.images.length > 0 ? (
-                          <img src={product.images[0]} alt={`${product.title} — handmade ${product.category} by ${product.shopName || product.sellerName || 'Artisan'} from Multan`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                        ) : (
-                          <div className="text-navy font-heading font-bold text-2xl italic">MC</div>
-                        )}
-                      </div>
-                      <div className="flex justify-between items-start mb-1">
-                        <h3 className="font-sans font-medium text-ink truncate group-hover:text-gold transition-colors pr-2">{product.title}</h3>
-                        <div className="flex items-center text-gold shrink-0">
-                          <span className="text-xs font-bold mr-1">{product.rating || 5.0}</span>
-                          <Star className="w-3 h-3 fill-current" />
-                        </div>
-                      </div>
-                      <p className="font-serif italic text-muted-foreground text-sm truncate mb-2">By {product.shopName || product.sellerName || 'Artisan'} &bull; {product.location || 'Multan'}</p>
-                      <p className="font-heading font-semibold text-gold mt-auto">{formatPrice(product.price)}</p>
-                    </Link>
+                    <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
                 {hasMore && (
@@ -216,8 +216,23 @@ export default function Explore() {
               </>
             ) : (
               <div className="text-center py-24 bg-white border border-border rounded-3xl flex flex-col items-center">
-                <ArchiveX className="w-16 h-16 text-gold/30 mb-6" />
-                <p className="font-serif italic text-2xl text-muted-foreground mb-4">No pieces found in this category yet. Check back soon!</p>
+                {categoryFilter === "Blue Pottery" ? (
+                  <div className="text-center flex flex-col items-center">
+                    <motion.img
+                      src="/images/hero-vase.png"
+                      alt="No Blue Pottery products found yet"
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      className="w-24 h-auto mx-auto mb-6 opacity-30"
+                    />
+                    <p className="font-serif italic text-2xl text-muted-foreground mb-4">No Blue Pottery yet. Check back soon!</p>
+                  </div>
+                ) : (
+                  <>
+                    <ArchiveX className="w-16 h-16 text-gold/30 mb-6" />
+                    <p className="font-serif italic text-2xl text-muted-foreground mb-4">No pieces found in this category yet. Check back soon!</p>
+                  </>
+                )}
                 <Button variant="link" onClick={() => setSearchParams({})} className="text-gold hover:text-ink hover-underline transition-colors mt-2">Clear filters</Button>
               </div>
             )}

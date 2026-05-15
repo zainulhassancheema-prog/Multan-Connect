@@ -6,9 +6,10 @@ interface AnimatedSectionProps {
   className?: string;
   delay?: number;
   id?: string;
+  style?: React.CSSProperties;
 }
 
-export default function AnimatedSection({ children, className = '', delay = 0, id }: AnimatedSectionProps) {
+export default function AnimatedSection({ children, className = '', delay = 0, id, style }: AnimatedSectionProps) {
   return (
     <motion.div
       id={id}
@@ -17,6 +18,7 @@ export default function AnimatedSection({ children, className = '', delay = 0, i
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
       className={className}
+      style={style}
     >
       {children}
     </motion.div>

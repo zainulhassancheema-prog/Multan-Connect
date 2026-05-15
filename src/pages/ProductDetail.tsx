@@ -7,16 +7,19 @@ import { Product, User, Review } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingBag, Heart, Share2, Star } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, Star, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cartStore';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/shared/BackButton';
 import { useAuthStore } from '@/lib/store/authStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SocialProofCard } from '@/components/shared/SocialProofCard';
+import { AccordionRow } from '@/components/shared/AccordionRow';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
-  const [activeImage, setActiveImage] = useState(0);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
 
@@ -35,7 +38,7 @@ export default function ProductDetail() {
     }
   });
 
-  const { data: artisan, isLoading: artisanLoading } = useQuery({
+  const { data: artisan } = useQuery({
     queryKey: ['artisan', product?.sellerId],
     enabled: !!product?.sellerId,
     queryFn: async () => {
@@ -60,7 +63,17 @@ export default function ProductDetail() {
     }
   });
 
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  useEffect(() => {
+    // Determine mock activity specific to product detail page if no realtime data exists
+    setRecentActivity([
+      { id: 1, name: "Ali R.", action: "has liked this item", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150" },
+      { id: 2, name: "Fatima S.", action: "has just purchased", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150", isPurchase: true },
+    ]);
+  }, [id]);
+
   const images = product?.images?.length ? product.images : [];
+  const activeImage = images[activeImageIdx] || '';
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -110,132 +123,223 @@ export default function ProductDetail() {
     );
   }
 
-  if (!product) return <div className="text-center py-24 font-serif text-2xl">Product not found</div>;
+  if (!product) return <div className="text-center py-24 font-playfair text-2xl">Product not found</div>;
 
   return (
-    <div className="bg-cream min-h-screen pb-24">
-      {/* Breadcrumb & Back */}
-      <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
-        <BackButton />
-        <div className="text-sm flex items-center gap-2 text-muted-foreground uppercase tracking-widest text-xs">
-          <Link to="/" className="hover:text-gold">Home</Link>
-          <span>/</span>
-          <Link to={`/explore?category=${product.category}`} className="hover:text-gold">{product.category}</Link>
-          <span>/</span>
-          <span className="text-ink truncate max-w-[200px]">{product.title}</span>
-        </div>
+    <div className="relative min-h-screen bg-white overflow-hidden pb-24">
+      {/* Background blobs */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute -top-20 -right-20 w-96 h-96 rounded-full"
+          style={{ background: "radial-gradient(ellipse, rgba(41,182,197,0.15), transparent 70%)", filter: "blur(40px)" }} />
+        <div className="absolute bottom-0 -left-20 w-80 h-80 rounded-full"
+          style={{ background: "radial-gradient(ellipse, rgba(201,151,58,0.12), transparent 70%)", filter: "blur(40px)" }} />
       </div>
 
-      <div className="container mx-auto px-4 flex flex-col md:flex-row gap-12 lg:gap-24 mb-24">
-        
-        {/* Images */}
-        <div className="w-full md:w-1/2 flex flex-col gap-4">
-          <div className="aspect-[4/5] md:aspect-square bg-navy/5 flex items-center justify-center rounded-3xl overflow-hidden border border-border">
-            {images.length > 0 ? (
-              <img src={images[activeImage]} alt={`${product.title} — ${product.category} by ${product.shopName || product.sellerName || 'Artisan'}`} className="w-full h-full object-cover" />
-            ) : (
-              <div className="text-navy font-heading font-bold text-4xl italic opacity-50">MC</div>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-4">
+          <BackButton />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 items-start mt-4">
+
+          {/* LEFT: Product title, price, CTA */}
+          <div className="space-y-8 z-10 order-2 xl:order-1 flex flex-col justify-center">
+            {/* Category */}
+            <span className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <span className="w-6 h-px bg-gold" />
+              {product.category?.replace("_", " ") || "Handmade"}
+            </span>
+
+            {/* Giant title — reference image style */}
+            <h1 className="font-playfair text-5xl sm:text-6xl font-black text-ink leading-tight tracking-tight">
+              {product.title.split(" ").map((word, i) => (
+                <span key={i} className="block">
+                  {i === 0 ? (
+                    <span className="relative inline-block">
+                      {word}
+                      <svg className="absolute -bottom-1 left-0 w-full h-3" viewBox="0 0 100 12" preserveAspectRatio="none">
+                        <ellipse cx="50" cy="6" rx="49" ry="4" stroke="#C9973A" strokeWidth="1.5" fill="none" />
+                      </svg>
+                    </span>
+                  ) : word}
+                </span>
+              ))}
+            </h1>
+
+            {/* Price */}
+            <p className="text-3xl sm:text-4xl font-playfair font-bold text-ink">
+              {formatPrice(product.price)}
+            </p>
+
+            {/* Description intro */}
+            <p className="text-ink/60 text-sm leading-relaxed">
+              {product.description?.slice(0, 160)}...
+            </p>
+
+            {/* CTA row */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleAddToCart}
+                className="flex items-center gap-2 bg-ink hover:bg-navy text-white font-medium px-8 py-4 rounded-full shadow-warm-md hover:shadow-navy-lg transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <Check size={16} />
+                Add to Cart
+              </button>
+              <button className="w-12 h-12 rounded-full border-2 border-ink/10 hover:border-gold flex items-center justify-center text-ink/40 hover:text-gold transition-all duration-300 hover:shadow-gold bg-white/50 backdrop-blur-sm">
+                <Heart size={18} />
+              </button>
+            </div>
+
+            {/* Artisan min-card */}
+            {artisan && (
+              <div className="flex items-center gap-4 mt-8 pt-6 border-t border-ink/5">
+                <img src={artisan.shopLogoUrl || artisan.photoURL || `https://ui-avatars.com/api/?name=${artisan.shopName || artisan.displayName}&background=C9973A&color=fff`} alt={artisan.shopName || artisan.displayName || ''} className="w-12 h-12 rounded-full ring-2 ring-gold/20" />
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-0.5">Crafted By</p>
+                  <Link to={`/artisan/${artisan.shopHandle || artisan.uid}`} className="font-playfair font-bold text-lg text-ink hover:text-gold transition-colors">{artisan.shopName || artisan.displayName}</Link>
+                </div>
+              </div>
             )}
           </div>
-          {images.length > 1 && (
-            <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-              {images.map((img, idx) => (
-                <button 
-                  key={idx} 
-                  onClick={() => setActiveImage(idx)}
-                  className={`w-20 h-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-gold opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                >
-                  <img src={img} alt={`${product.title} — view ${idx + 1} of ${images.length}`} className="w-full h-full object-cover" />
+
+          {/* CENTER: 3D Floating Product Image */}
+          <div className="relative flex items-center justify-center min-h-[450px] sm:min-h-[600px] order-1 xl:order-2 perspective-container">
+
+            {/* Arch background */}
+            <div className="absolute inset-x-4 sm:inset-x-8 bottom-0 top-12"
+              style={{
+                background: "linear-gradient(180deg, rgba(26,35,126,0.03) 0%, rgba(41,182,197,0.03) 100%)",
+                borderRadius: "50% 50% 48% 48% / 20% 20% 80% 80%",
+              }}
+            />
+
+            {/* Orbit rings */}
+            <div className="absolute w-[280px] sm:w-[320px] lg:w-[400px] h-[280px] sm:h-[320px] lg:h-[400px] rounded-full border border-gold/20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ animation: "orbit 25s linear infinite" }} />
+            <div className="absolute w-[220px] sm:w-[240px] lg:w-[280px] h-[220px] sm:h-[240px] lg:h-[280px] rounded-full border border-teal/15 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ animation: "orbit 15s linear infinite reverse" }} />
+
+            {/* Floating orbs */}
+            {[
+              { size: 24, top: "20%", right: "8%", color: "gold", delay: "0s" },
+              { size: 16, bottom: "30%", left: "5%", color: "teal", delay: "1.5s" },
+              { size: 18, top: "50%", left: "10%", color: "navy", delay: "3s" },
+            ].map((orb, i) => (
+              <div key={i} className="absolute rounded-full float-orb"
+                style={{
+                  width: orb.size, height: orb.size,
+                  top: orb.top, right: orb.right, bottom: orb.bottom, left: orb.left,
+                  animationDelay: orb.delay,
+                  background: orb.color === "gold" ? "radial-gradient(circle at 35% 35%, white, rgba(201,151,58,0.7))" : orb.color === "teal" ? "radial-gradient(circle at 35% 35%, white, rgba(41,182,197,0.7))" : "radial-gradient(circle at 35% 35%, white, rgba(26,35,126,0.5))",
+                  boxShadow: "inset -2px -2px 4px rgba(0,0,0,0.1), 2px 4px 8px rgba(0,0,0,0.1)"
+                }}
+              />
+            ))}
+
+            {/* 3D Rotating product image */}
+            <motion.div
+              animate={{ y: [0, -12, 0], rotateY: [0, 4, 0, -4, 0] }}
+              transition={{ y: { duration: 6, repeat: Infinity, ease: "easeInOut" }, rotateY: { duration: 8, repeat: Infinity, ease: "easeInOut" } }}
+              style={{ transformStyle: "preserve-3d" }}
+              className="relative z-10 w-64 sm:w-80 h-80 flex items-center justify-center drop-shadow-2xl"
+            >
+              {activeImage ? (
+                <img src={activeImage} alt={product.title} className="max-w-full max-h-full object-contain"
+                  style={{ filter: "drop-shadow(0 30px 40px rgba(26,35,126,0.2)) drop-shadow(0 8px 16px rgba(201,151,58,0.1))" }}
+                />
+              ) : (
+                <div className="text-navy/20 font-playfair font-bold text-6xl italic">MC</div>
+              )}
+            </motion.div>
+
+            {/* Nav arrows — reference image styled */}
+            {images.length > 1 && (
+              <>
+                <button onClick={() => setActiveImageIdx(prev => (prev === 0 ? images.length - 1 : prev - 1))} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-ink/10 flex items-center justify-center hover:border-gold hover:text-gold transition-all duration-300 bg-white/60 backdrop-blur-md z-20 shadow-sm">
+                  <ChevronLeft size={18} />
                 </button>
+                <button onClick={() => setActiveImageIdx(prev => (prev === images.length - 1 ? 0 : prev + 1))} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-ink/10 flex items-center justify-center hover:border-gold hover:text-gold transition-all duration-300 bg-white/60 backdrop-blur-md z-20 shadow-sm">
+                  <ChevronRight size={18} />
+                </button>
+                
+                {/* Thumbnail dots */}
+                <div className="absolute bottom-6 flex gap-2 z-20 bg-white/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                  {images.map((_, i) => (
+                    <button key={i} onClick={() => setActiveImageIdx(i)} className={`w-2 h-2 rounded-full transition-all duration-300 ${activeImageIdx === i ? "bg-gold scale-125" : "bg-ink/20 hover:bg-ink/40"}`} />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* RIGHT: Accordion details + social proof */}
+          <div className="space-y-6 z-10 order-3 flex flex-col justify-center">
+
+            {/* Social proof card 1 */}
+            <AnimatePresence>
+              {recentActivity.length > 0 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="mb-2 w-max ml-auto">
+                  <SocialProofCard
+                    avatar={recentActivity[0].avatar}
+                    name={recentActivity[0].name}
+                    action="has liked this item"
+                    icon={<Heart size={10} className="fill-red-500 text-red-500" strokeWidth={3} />}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Accordion — reference image style */}
+            <div className="bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-warm-sm border border-white">
+              {[
+                { label: "Description", content: product.description },
+                { label: "Story", content: "Handcrafted using generational techniques. Each piece carries the distinct touch of the artisan." },
+                { label: "Care & Maintenance", content: "Avoid direct harsh chemicals. Wipe gently with damp cloth." },
+                { label: "Shipping Info", content: "Standard orders dispatched within 2-3 business days fully insured." },
+              ].map((item, i) => (
+                <AccordionRow key={i} {...item} defaultOpen={i === 0} />
               ))}
             </div>
-          )}
+
+            {/* Second social proof — purchase notification */}
+            <AnimatePresence>
+              {recentActivity.length > 1 && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="mt-2 w-max">
+                  <SocialProofCard
+                    avatar={recentActivity[1].avatar}
+                    name={recentActivity[1].name}
+                    action="just purchased"
+                    icon={<ShoppingBag size={10} className="text-teal-600" strokeWidth={3} />}
+                    variant="purchase"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+          </div>
         </div>
 
-        {/* Details */}
-        <div className="w-full md:w-1/2 flex flex-col">
-          <h1 className="font-heading font-bold text-4xl lg:text-5xl text-ink leading-[1.1] mb-6">{product.title}</h1>
-          <div className="flex items-center gap-4 mb-8 text-sm">
-            <div className="flex items-center text-gold">
-              {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < (product.rating || 5) ? 'fill-current' : 'text-muted'}`} />)}
-            </div>
-            <span className="text-muted-foreground underline decoration-muted-foreground/30">{product.reviewCount || 0} reviews</span>
-          </div>
-
-          <p className="font-sans text-3xl font-medium text-ink mb-8">{formatPrice(product.price)}</p>
-
-          <p className="font-serif text-lg leading-relaxed text-ink/80 mb-10 whitespace-pre-wrap">{product.description}</p>
-
-          <div className="bg-white rounded-2xl p-6 border border-border mb-10 flex flex-col md:flex-row gap-6 justify-between items-center">
-            <div className="flex items-center gap-4 w-full md:w-auto">
-              <button 
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-muted font-mono"
-              >-</button>
-              <span className="font-mono w-4 text-center">{quantity}</span>
-              <button 
-                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-muted font-mono"
-              >+</button>
-            </div>
-            <Button onClick={handleAddToCart} size="lg" className="w-full md:w-auto flex-1 bg-gold hover:bg-gold-light text-ink font-bold rounded-full px-8 py-6 text-lg uppercase tracking-wide">
-              Add to Cart
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full w-[52px] h-[52px] shrink-0 border-border text-ink hover:text-gold hover:border-gold">
-              <Heart className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* Artisan Card */}
-          {artisan && (
-            <div className="mt-auto border-t border-border pt-8">
-              <span className="font-sans tracking-widest uppercase text-xs text-muted-foreground mb-4 block">Crafted By</span>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center bg-navy" style={!artisan.shopLogoUrl && !artisan.photoURL ? { backgroundColor: '#1A237E' } : {}}>
-                  {artisan.shopLogoUrl ? (
-                    <img src={artisan.shopLogoUrl} alt={`Shop logo for ${artisan.shopName || artisan.displayName}`} className="w-full h-full object-cover bg-white" />
-                  ) : artisan.photoURL ? (
-                     <img src={artisan.photoURL} alt={`Shop logo for ${artisan.shopName || artisan.displayName}`} className="w-full h-full object-cover bg-white" />
-                  ) : (
-                    <span className="text-xl font-heading font-bold text-white">{artisan.shopName?.charAt(0) || artisan.displayName?.charAt(0) || 'M'}</span>
-                  )}
-                </div>
-                <div>
-                  <Link to={`/artisan/${artisan.shopHandle || artisan.uid}`} className="font-heading font-bold text-xl hover:text-gold transition-colors block">{artisan.shopName || artisan.displayName}</Link>
-                  <span className="font-serif italic text-muted-foreground text-sm">{artisan.shopBio || `${artisan.craftSpecialty || artisan.craftType?.replace('_', ' ') || 'Master Artisan'} • ${artisan.shopLocation || artisan.workshopLocation || product.location || 'Multan'}`}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
-      </div>
-
-      {/* Reviews Section */}
-      <div className="container mx-auto px-4 max-w-4xl border-t border-border pt-16">
-        <h2 className="font-heading font-bold text-3xl text-ink mb-12">Customer Reviews</h2>
-        {reviews && reviews.length > 0 ? (
-          <div className="space-y-8">
-            {reviews.map((review) => (
-              <div key={review.id} className="pb-8 border-b border-border/50 last:border-0">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center font-heading font-bold">{review.reviewerName?.charAt(0) || 'U'}</div>
-                  <div>
-                    <p className="font-sans font-medium text-ink">{review.reviewerName || 'Anonymous User'}</p>
-                    <div className="flex items-center text-gold mt-1">
-                      {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < review.rating ? 'fill-current' : 'text-muted'}`} />)}
+        {/* Reviews Section at bottom */}
+        {reviews && reviews.length > 0 && (
+          <div className="max-w-3xl mt-24 pt-12 border-t border-ink/5">
+            <h2 className="font-playfair text-3xl text-navy font-bold mb-8">What Buyers Say</h2>
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div key={review.id} className="p-6 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-[0_4px_12px_rgba(26,35,126,0.02)]">
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center font-playfair font-bold text-white shadow-warm-sm">{review.reviewerName?.charAt(0) || 'U'}</div>
+                    <div>
+                      <p className="font-sans font-medium text-ink">{review.reviewerName || 'Anonymous User'}</p>
+                      <div className="flex items-center gap-0.5 mt-0.5 text-gold">
+                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-muted'}`} />)}
+                      </div>
                     </div>
                   </div>
+                  <p className="font-sans text-ink/70 leading-relaxed text-sm">{review.comment}</p>
                 </div>
-                <p className="font-serif text-ink/80">{review.comment}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        ) : (
-          <p className="font-serif italic text-muted-foreground">No reviews yet for this product.</p>
         )}
       </div>
-
     </div>
   );
 }

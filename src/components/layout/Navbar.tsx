@@ -12,6 +12,7 @@ import {
 import { auth } from '@/lib/firebase/config';
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { NavSearchBar } from './NavSearchBar';
 
 export default function Navbar() {
   const { user, mode, setMode } = useAuthStore();
@@ -21,9 +22,18 @@ export default function Navbar() {
   const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setMobileSearchOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -52,7 +62,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-cream border-b border-primary/10 flex flex-col justify-center min-h-[72px]">
+    <header className={`sticky top-0 z-50 w-full flex flex-col justify-center min-h-[72px] transition-all duration-500 ${scrolled ? "bg-white/90 backdrop-blur-xl shadow-warm-md border-b border-gold/10" : "bg-white border-b border-gray-100"}`}>
       <div className="w-full h-[72px] px-4 md:px-12 flex items-center justify-between">
         
         {/* Mobile Menu Icon */}
@@ -65,8 +75,8 @@ export default function Navbar() {
         </button>
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <img src="/Logo.jpeg" alt="Multan Connect — go to homepage" className="h-14 w-14 object-cover rounded-full mix-blend-multiply border border-transparent group-hover:border-gold/30 transition-all duration-300 shadow-sm" />
+        <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+          <img src="/Logo.jpeg" alt="Multan Connect — go to homepage" className="h-10 w-10 object-cover mix-blend-multiply transition-transform duration-300 hover:scale-105 drop-shadow-sm rounded-full" />
           <div className="hidden md:flex flex-col ml-1">
             <span className="text-[16px] font-bold text-primary tracking-[0.1em] leading-none mb-1">MULTAN</span>
             <span className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold leading-none">CONNECT</span>
@@ -74,17 +84,20 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-[32px]">
-          <Link to="/explore" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">The Marketplace</Link>
-          <Link to="/stories" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Stories</Link>
-          <Link to="/sustainability" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Sustainability</Link>
-          <Link to="/artisans" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Artisans</Link>
-          <Link to="/explore?category=Blue%20Pottery" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Blue Pottery</Link>
-          <Link to="/explore?category=Khussa" className="text-[14px] font-medium text-ink uppercase tracking-[0.05em] hover:text-gold transition-colors hover-underline">Khussa</Link>
+        <nav className="hidden lg:flex items-center gap-[32px] flex-shrink-0 mx-4">
+          <Link to="/explore" className="relative text-sm text-ink/70 hover:text-navy transition-colors duration-200 py-1 group">The Marketplace<span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gold transition-all duration-300 group-hover:w-full rounded-full" /></Link>
+          <Link to="/stories" className="relative text-sm text-ink/70 hover:text-navy transition-colors duration-200 py-1 group">Stories<span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gold transition-all duration-300 group-hover:w-full rounded-full" /></Link>
+          <Link to="/sustainability" className="relative text-sm text-ink/70 hover:text-navy transition-colors duration-200 py-1 group">Sustainability<span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gold transition-all duration-300 group-hover:w-full rounded-full" /></Link>
+          <Link to="/artisans" className="relative text-sm text-ink/70 hover:text-navy transition-colors duration-200 py-1 group">Artisans<span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gold transition-all duration-300 group-hover:w-full rounded-full" /></Link>
         </nav>
 
+        {/* Desktop Search Bar */}
+        <div className="hidden md:flex flex-1 justify-center px-4 max-w-xl xl:max-w-3xl">
+          <NavSearchBar />
+        </div>
+
         {/* Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-shrink-0 ml-auto">
           {user?.role === 'both' && (
              <div className="hidden lg:flex bg-sand p-1 rounded-full items-center border border-border mr-2">
                <button 
@@ -102,12 +115,29 @@ export default function Navbar() {
              </div>
           )}
 
-          <button className="text-ink hover:text-gold transition-colors hidden sm:block">
-            <Search className="w-5 h-5" />
+          {/* Mobile search toggle */}
+          <button
+            type="button"
+            onClick={() => setMobileSearchOpen(prev => !prev)}
+            aria-label="Toggle search"
+            aria-expanded={mobileSearchOpen}
+            className={`md:hidden w-9 h-9 rounded-xl flex items-center 
+                        justify-center transition-colors duration-200
+                        ${mobileSearchOpen
+                          ? "bg-gold text-white"
+                          : "bg-gray-100 text-navy hover:bg-gray-200"
+                        }`}
+          >
+            <Search size={17} />
           </button>
           
-          <Link to="/cart" className="relative text-ink hover:text-gold transition-colors flex items-center font-semibold text-[13px] tracking-wide hover-underline">
-            CART ({cartItemCount})
+          <Link to="/cart" className="relative w-9 h-9 rounded-xl bg-gray-50 hover:bg-gold/10 hover:shadow-gold flex items-center justify-center transition-all duration-300 group">
+            <ShoppingBag size={17} className="text-ink/60 group-hover:text-gold transition-colors" />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse-gold shadow-gold">
+                {cartItemCount}
+              </span>
+            )}
           </Link>
 
           {user ? (
@@ -144,7 +174,7 @@ export default function Navbar() {
             animate={{ height: "calc(100vh - 72px)", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="fixed top-[72px] left-0 w-full bg-cream z-40 overflow-y-auto md:hidden"
+            className="fixed top-[72px] left-0 w-full bg-white z-40 overflow-y-auto md:hidden"
             style={{ height: 'calc(100vh - 72px)' }}
           >
             <div className="flex flex-col px-6 py-8 gap-6 border-t border-primary/5">
@@ -177,6 +207,23 @@ export default function Navbar() {
                   </div>
                 </>
               )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Search Bar — expands below navbar */}
+      <AnimatePresence>
+        {mobileSearchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-visible border-t border-gray-100 md:hidden"
+          >
+            <div className="px-4 py-3 bg-white">
+              <NavSearchBar />
             </div>
           </motion.div>
         )}
